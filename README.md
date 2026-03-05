@@ -31,5 +31,13 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 *   **Firestore Rules**: Database access is enforced via server-side rules.
 *   **Minimal Data**: Only a nickname and address are required to participate.
 
-## Demo
+## 📺 Demonstration
+[Check out the App here!](https://your-username.github.io)
 
+### 1. Web
+![Demo1](assets/screenshots/demo1.png)
+![Demo2](assets/screenshots/demo2.png)
+
+### 2. Admin Dashboard
+![Demo3](assets/screenshots/demo3.png)
+![Demo4](assets/screenshots/demo4.png)
