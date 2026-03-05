@@ -42,7 +42,7 @@ class _RequestPageState extends State<RequestPage> {
           TextField(controller: _addressController, maxLines: 3, decoration: const InputDecoration(labelText: "Full Address", border: OutlineInputBorder())),
           const SizedBox(height: 15),
           DropdownButtonFormField<String>(
-            value: _selectedTopic,
+            initialValue: _selectedTopic,
             items: ["Inspiration", "Comfort", "Travel Story", "Daily Life"].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
             onChanged: (val) => setState(() => _selectedTopic = val!),
             decoration: const InputDecoration(labelText: "Message Topic", border: OutlineInputBorder()),
