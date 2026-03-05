@@ -34,7 +34,7 @@ class _RequestPageState extends State<RequestPage> {
               _tapCount++;
               if (_tapCount == 5) Navigator.pushNamed(context, '/admin-login');
             },
-            child: const Text("Receive Warmth From A Stranger", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            child: const Text("Receive Warmth From A Traveller", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(height: 30),
           TextField(controller: _nameController, decoration: const InputDecoration(labelText: "Nickname", border: OutlineInputBorder())),

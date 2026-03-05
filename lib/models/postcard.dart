@@ -8,6 +8,11 @@ class Postcard {
   final String status; // 'pending', 'sent', 'received'
   final DateTime? requestDate;
   final DateTime? sentDate;
+  
+  // --- 新增地圖相關欄位 ---
+  final double? lat;       // 緯度
+  final double? lng;       // 經度
+  final String? sentCity;  // 寄出的城市名稱 (例如: "Tokyo, Japan")
 
   Postcard({
     required this.id,
@@ -17,6 +22,9 @@ class Postcard {
     required this.status,
     this.requestDate,
     this.sentDate,
+    this.lat,
+    this.lng,
+    this.sentCity,
   });
 
   factory Postcard.fromFirestore(DocumentSnapshot doc) {
@@ -29,6 +37,10 @@ class Postcard {
       status: data['status'] ?? 'pending',
       requestDate: (data['requestDate'] as Timestamp?)?.toDate(),
       sentDate: (data['sentDate'] as Timestamp?)?.toDate(),
+      // --- 解析新增欄位 ---
+      lat: (data['lat'] as num?)?.toDouble(),
+      lng: (data['lng'] as num?)?.toDouble(),
+      sentCity: data['sentCity'],
     );
   }
 
@@ -40,6 +52,10 @@ class Postcard {
       'status': status,
       'requestDate': requestDate ?? FieldValue.serverTimestamp(),
       'sentDate': sentDate,
+      // --- 寫入新增欄位 ---
+      'lat': lat,
+      'lng': lng,
+      'sentCity': sentCity,
     };
   }
 }
