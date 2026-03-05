@@ -1,14 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'views/request_page.dart';
+import 'views/tracking_page.dart';
+import 'views/admin/admin_login.dart'; // 需建立此檔案處理 Auth
 
-void main() => runApp(const PostcardApp());
+// main.dart 修改
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: const WanderStampApp(),
+    ),
+  );
+}
 
-class PostcardApp extends StatelessWidget {
-  const PostcardApp({super.key});
+
+class WanderStampApp extends StatelessWidget {
+  const WanderStampApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.amber),
-      home: const MainNavigator(),
+      routes: {
+        '/': (context) => const MainNavigator(),
+        '/admin-login': (context) => const AdminLoginPage(),
+      },
     );
   }
 }
@@ -20,67 +39,21 @@ class MainNavigator extends StatefulWidget {
 }
 
 class _MainNavigatorState extends State<MainNavigator> {
-  int _index = 0;
+  int _idx = 0;
   final _pages = [const RequestPage(), const TrackingPage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("📮 Random Warmth Postcard")),
-      body: _pages[_index],
+      appBar: AppBar(title: const Text("📮 WanderStamp")),
+      body: _pages[_idx],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        selectedIndex: _idx,
+        onDestinationSelected: (i) => setState(() => _idx = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.send), label: "Request"),
-          NavigationDestination(icon: Icon(Icons.map), label: "Track"),
+          NavigationDestination(icon: Icon(Icons.send_rounded), label: "Request"),
+          NavigationDestination(icon: Icon(Icons.history_edu_rounded), label: "Track"),
         ],
-      ),
-    );
-  }
-}
-
-// 頁面 A: 請求表單
-class RequestPage extends StatelessWidget {
-  const RequestPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text("Receive a surprise from my journey.", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 20),
-          TextFormField(decoration: const InputDecoration(labelText: "Name / Nickname", border: OutlineInputBorder())),
-          const SizedBox(height: 15),
-          TextFormField(maxLines: 3, decoration: const InputDecoration(labelText: "Full Address", border: OutlineInputBorder())),
-          const SizedBox(height: 15),
-          const Text("What message do you need?"),
-          Wrap(
-            spacing: 8,
-            children: ["Inspiration", "Comfort", "Travel Story", "Daily Life"].map((topic) => ChoiceChip(label: Text(topic), selected: false)).toList(),
-          ),
-          const SizedBox(height: 30),
-          Center(child: ElevatedButton(onPressed: () {}, child: const Text("Request Postcard"))),
-        ],
-      ),
-    );
-  }
-}
-
-// 頁面 B: 追蹤列表
-class TrackingPage extends StatelessWidget {
-  const TrackingPage({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 5,
-      itemBuilder: (context, i) => ListTile(
-        leading: const Icon(Icons.mark_as_unread),
-        title: Text("To: Stranger in London"),
-        subtitle: const Text("Status: Sent from Tokyo on 2024/05/20"),
-        trailing: const Icon(Icons.chevron_right),
       ),
     );
   }
