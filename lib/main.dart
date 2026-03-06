@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart'; // 新增
-import 'firebase_options.dart';          // 新增
+import 'package:provider/provider.dart'; 
+import 'firebase_options.dart';          
 import 'providers/auth_provider.dart';
+import 'views/received_confirmation_page.dart';
 import 'views/request_page.dart';
 import 'views/tracking_page.dart';
 import 'views/admin/admin_login.dart';
@@ -41,6 +42,7 @@ class WanderStampApp extends StatelessWidget {
       routes: {
         '/': (context) => const MainNavigator(),
         '/admin-login': (context) => const AdminLoginPage(),
+        '/received': (context) => const ReceivedConfirmationPage(),
       },
     );
   }

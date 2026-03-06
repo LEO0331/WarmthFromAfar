@@ -32,7 +32,7 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 *   **Minimal Data**: Only a nickname and address are required to participate.
 
 ## 📺 Demonstration
-[Check out the App here!](https://your-username.github.io)
+[Check out the App here!](https://leo0331.github.io)
 
 ### 1. Web
 ![Demo1](assets/screenshots/demo1.png)

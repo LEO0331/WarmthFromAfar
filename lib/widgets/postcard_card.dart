@@ -82,48 +82,77 @@ class PostcardCard extends StatelessWidget {
 
   // --- 邏輯：處理定位並更新 Firebase ---
   Future<void> _handleMarkAsSent(BuildContext context) async {
-    try {
-      // 1. 請求位置權限
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-
-      // 2. 獲取座標
-      Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
-
-      // 3. 逆向地理編碼（座標轉城市名）
-      String cityName = "Unknown Location";
-      try {
-        List<Placemark> placemarks =
-            await placemarkFromCoordinates(position.latitude, position.longitude);
-        if (placemarks.isNotEmpty) {
-          final p = placemarks.first;
-          cityName = "${p.locality}, ${p.country}";
-        }
-      } catch (e) {
-        debugPrint("Geocoding failed: $e");
-      }
-
-      // 4. 更新 Firebase (需確保 FirebaseService 有對應方法)
-      await FirebaseService().updateStatusWithLocation(
-        postcard.id,
-        'sent',
-        lat: position.latitude,
-        lng: position.longitude,
-        city: cityName,
-      );
-
+  try {
+    // 檢查服務是否開啟
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Successfully marked as sent from $cityName! 📮")),
+          const SnackBar(content: Text("Please enable location services.")),
         );
       }
-    } catch (e) {
-      debugPrint("Error: $e");
+      return;
     }
+
+    // 請求權限
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    // 設定最新的 LocationSettings (解決 Deprecated 警告)
+    const LocationSettings locationSettings = LocationSettings(
+      accuracy: LocationAccuracy.medium,
+    );
+
+    // 獲取座標
+    Position position = await Geolocator.getCurrentPosition(
+      locationSettings: locationSettings,
+    );
+
+    // 逆向地理編碼 (座標轉城市)
+    String cityName = "Unknown Location";
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+          position.latitude, position.longitude);
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        cityName = "${p.locality ?? ''}, ${p.country ?? ''}";
+      }
+    } catch (e) {
+      debugPrint("Geocoding failed: $e");
+    }
+
+    // 更新 Firebase
+    await FirebaseService().updateStatusWithLocation(
+      postcard.id,
+      'sent',
+      lat: null, // 既然不用地圖標記，我們可以存 null
+      lng: null,
+      city: cityName,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Sent from $cityName! 📮")),
+      );
+    }
+  } catch (e) {
+    debugPrint("Location Error: $e");
+    // ignore: use_build_context_synchronously
+    await _updateWithoutLocation(context);
   }
+}
+
+// 輔助方法：當定位失敗時的保底更新
+Future<void> _updateWithoutLocation(BuildContext context) async {
+  await FirebaseService().updateStatus(postcard.id, 'sent');
+  if (context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Marked as sent (Location skipped).")),
+    );
+  }
+}
 
   // --- 邏輯：顯示 QR Code 對話框 ---
   void _showQRDialog(BuildContext context) {

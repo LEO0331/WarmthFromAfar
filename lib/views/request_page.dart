@@ -105,7 +105,7 @@ class _RequestPageState extends State<RequestPage> {
           
           // 5. 下拉選單實作：使用 hint 取代 initialValue
           DropdownButtonFormField<String>(
-            value: _selectedTopic,
+            initialValue: _selectedTopic,
             hint: const Text("Select a Message Topic"), // 初始為空時顯示的提示
             items: _topics.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
             onChanged: (val) => setState(() => _selectedTopic = val),

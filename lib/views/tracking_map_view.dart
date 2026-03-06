@@ -70,7 +70,7 @@ class WanderMap extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.8),
+            color: Colors.white.withValues(),
             borderRadius: BorderRadius.circular(4),
           ),
           child: const Text("Warmth", style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
