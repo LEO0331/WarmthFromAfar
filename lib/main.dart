@@ -51,7 +51,7 @@ class MainNavigator extends StatefulWidget {
 
 class _MainNavigatorState extends State<MainNavigator> {
   int _idx = 0;
-  final List<Widget> _pages = [const RequestPage(), const TrackingPage()];
+  final List<Widget> _pages = [const RequestPage(), const TrackingPage(), const ReceivedConfirmationPage(),];
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +73,10 @@ class _MainNavigatorState extends State<MainNavigator> {
           NavigationDestination(
             icon: Icon(Icons.history_edu_rounded),
             label: "Track",
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.volunteer_activism_rounded), 
+            label: "Received", 
           ),
         ],
       ),
