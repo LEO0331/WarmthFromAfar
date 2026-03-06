@@ -5,7 +5,7 @@
 WanderStamp is a warm Flutter Web application designed to connect travelers with people across the globe. The goal is simple: send postcard to anyone who needs a little bit of warmth, encouragement, or a travel story from afar. Spreading kindness and stories, one stamp at a time. 🌍✨
 
 ## 🌐 Live Demo
-[Check out the App here!](https://leo0331.github.io)
+[Check out the App here!](https://leo0331.github.io/WarmthFromAfar/)
 
 ## 🌟 Why I Built This?
 
