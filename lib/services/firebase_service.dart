@@ -40,14 +40,15 @@ class FirebaseService {
   }
 
   // 使用者提交請求
-  Future<void> addRequest(String name, String address, String topic) async {
-    await _db.collection('postcards').add({
+  Future<String?> addRequest(String name, String address, String topic) async {
+    DocumentReference docRef = await _db.collection('postcards').add({
       'receiverName': name,
       'address': address,
       'topic': topic,
       'status': 'pending',
       'requestDate': FieldValue.serverTimestamp(),
     });
+    return docRef.id; // 回傳生成的 ID
   }
 
   // 監聽所有明信片進度 (公開)

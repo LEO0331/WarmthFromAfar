@@ -35,11 +35,12 @@ class _TrackingPageState extends State<TrackingPage> {
         final filteredData = allData.where((p) {
           // ignore: dead_null_aware_expression, dead_code
           final String name = p.receiverName ?? "";
+          final id = p.id.toUpperCase();
           final String searchKey = _searchQuery;
 
-          final matchesSearch = name.toLowerCase().contains(
-            searchKey.toLowerCase(),
-          );
+          final matchesSearch =
+              name.contains(searchKey.toLowerCase()) ||
+              id.endsWith(searchKey.replaceAll("W-", ""));
 
           if (_showOnlySentOrReceived) {
             return matchesSearch &&

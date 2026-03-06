@@ -12,11 +12,9 @@ class _RequestPageState extends State<RequestPage> {
   final _nameController = TextEditingController();
   final _addressController = TextEditingController();
 
-  // 1. 將預設值設為 null，強制使用者選擇
   String? _selectedTopic;
   int _tapCount = 0;
 
-  // 2. 擴充更多溫暖的話題
   final List<String> _topics = [
     "Inspiration (勇氣與啟發)",
     "Comfort (溫暖與安慰)",
@@ -29,7 +27,6 @@ class _RequestPageState extends State<RequestPage> {
   ];
 
   void _submit() async {
-    // 3. 防呆檢查：確保話題已被選擇
     if (_nameController.text.isEmpty ||
         _addressController.text.isEmpty ||
         _selectedTopic == null) {
@@ -42,7 +39,8 @@ class _RequestPageState extends State<RequestPage> {
       return;
     }
 
-    await FirebaseService().addRequest(
+    // 1. 修改此處：接收 Firebase 回傳的 docId
+    final String? newDocId = await FirebaseService().addRequest(
       _nameController.text,
       _addressController.text,
       _selectedTopic!,
@@ -50,15 +48,41 @@ class _RequestPageState extends State<RequestPage> {
 
     if (!mounted) return;
 
-    // 彈出驚喜動畫對話框
-    showDialog(context: context, builder: (context) => const SuccessDialog());
+    // 2. 將 docId 傳給 SuccessDialog 顯示序號
+    showDialog(
+      context: context,
+      builder: (context) => SuccessDialog(docId: newDocId ?? "TEMP"),
+    );
 
-    // 4. 提交後重置表單
     setState(() {
       _nameController.clear();
       _addressController.clear();
       _selectedTopic = null;
     });
+  }
+
+  // 抽出統一的輸入框樣式 (Light Color Style)
+  InputDecoration _buildInputDecoration(
+    String label,
+    String hint,
+    IconData icon,
+  ) {
+    return InputDecoration(
+      labelText: label,
+      hintText: hint,
+      prefixIcon: Icon(icon, color: Colors.amber.shade700),
+      filled: true,
+      fillColor: Colors.grey.shade50, // 淺色背景
+      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.amber, width: 2),
+      ),
+    );
   }
 
   @override
@@ -71,7 +95,7 @@ class _RequestPageState extends State<RequestPage> {
             onTap: () {
               _tapCount++;
               if (_tapCount == 5) {
-                _tapCount = 0; // 重置計數
+                _tapCount = 0;
                 Navigator.pushNamed(context, '/admin-login');
               }
             },
@@ -82,43 +106,42 @@ class _RequestPageState extends State<RequestPage> {
             ),
           ),
           const SizedBox(height: 30),
+
+          // Nickname 輸入框
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: "Nickname / Name",
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person_outline),
-            ),
-          ),
-          const SizedBox(height: 15),
-          TextField(
-            controller: _addressController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              labelText: "Full Shipping Address",
-              hintText: "Include postal code and country",
-              hintStyle: TextStyle(
-                color: Color.fromARGB(255, 186, 182, 182),
-                fontSize: 14,
-              ),
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.home_outlined),
+            decoration: _buildInputDecoration(
+              "Nickname / Name",
+              "How should I call you?",
+              Icons.person_outline,
             ),
           ),
           const SizedBox(height: 15),
 
-          // 5. 下拉選單實作：使用 hint 取代 initialValue
+          // Address 輸入框 (Light Color 樣式)
+          TextField(
+            controller: _addressController,
+            maxLines: 3,
+            decoration: _buildInputDecoration(
+              "Full Shipping Address",
+              "Include postal code and country",
+              Icons.home_outlined,
+            ),
+          ),
+          const SizedBox(height: 15),
+
+          // 下拉選單
           DropdownButtonFormField<String>(
-            initialValue: _selectedTopic,
-            hint: const Text("Select a Message Topic"), // 初始為空時顯示的提示
+            value: _selectedTopic, // 確保這裡是 value 而非 initialValue
+            hint: const Text("Select a Message Topic"),
             items: _topics
                 .map((t) => DropdownMenuItem(value: t, child: Text(t)))
                 .toList(),
             onChanged: (val) => setState(() => _selectedTopic = val),
-            decoration: const InputDecoration(
-              labelText: "What do you need?",
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.auto_awesome_outlined),
+            decoration: _buildInputDecoration(
+              "What do you need?",
+              "",
+              Icons.auto_awesome_outlined,
             ),
           ),
 
@@ -129,6 +152,10 @@ class _RequestPageState extends State<RequestPage> {
               minimumSize: const Size(200, 50),
               backgroundColor: Colors.amber,
               foregroundColor: Colors.black87,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              elevation: 2,
             ),
             child: const Text(
               "Send Warmth Request 📮",
