@@ -41,6 +41,18 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js" async>
+    // 手動初始化引擎並指定渲染器
+    _flutter.loader.load({
+      onEntrypointLoaded: async function(engineInitializer) {
+        const engine = await engineInitializer.initializeEngine({
+          // 強制使用 html 模式，這對 Web 版地圖和自動翻譯最友善
+          renderer: "html",
+          useColorEmoji: true,
+        });
+        await engine.runApp();
+      }
+    });
+  </script>
 </body>
 </html>
