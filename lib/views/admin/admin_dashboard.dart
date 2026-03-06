@@ -38,8 +38,9 @@ class AdminDashboard extends StatelessWidget {
       body: StreamBuilder<List<Postcard>>(
         stream: FirebaseService().getPublicPostcards(), // 管理員看同一個 Stream 但顯示更多
         builder: (context, snapshot) {
-          if (!snapshot.hasData)
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
           return ListView.builder(
             itemCount: snapshot.data!.length,
             itemBuilder: (context, i) => PostcardCard(
