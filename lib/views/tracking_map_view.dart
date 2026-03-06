@@ -29,12 +29,13 @@ class WanderMap extends StatelessWidget {
           // 2. 設定圖層 (OpenStreetMap 免費圖資)
           TileLayer(
             // 使用 CartoDB 伺服器，它對 Web 端的連線限制最少
-  urlTemplate: 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
-  subdomains: ['a','b','c','d'],
-            userAgentPackageName: 'com.leo.warmthfromafar', 
-            tileProvider: NetworkTileProvider(), 
+            urlTemplate:
+                'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+            subdomains: ['a', 'b', 'c', 'd'],
+            userAgentPackageName: 'com.leo.warmthfromafar',
+            tileProvider: NetworkTileProvider(),
           ),
-          
+
           // 3. 渲染標記圖層
           MarkerLayer(
             markers: markersData.map((p) {
@@ -49,12 +50,10 @@ class WanderMap extends StatelessWidget {
               );
             }).toList(),
           ),
-          
+
           // 4. 加上版權宣告 (OSM 規範)
           const RichAttributionWidget(
-            attributions: [
-              TextSourceAttribution('OpenStreetMap contributors'),
-            ],
+            attributions: [TextSourceAttribution('OpenStreetMap contributors')],
           ),
         ],
       ),
@@ -76,7 +75,10 @@ class WanderMap extends StatelessWidget {
             color: Colors.white.withValues(),
             borderRadius: BorderRadius.circular(4),
           ),
-          child: const Text("Warmth", style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold)),
+          child: const Text(
+            "Warmth",
+            style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold),
+          ),
         ),
       ],
     );
@@ -91,14 +93,20 @@ class WanderMap extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text("📮 Sent from ${p.sentCity ?? 'Unknown City'}", 
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text(
+              "📮 Sent from ${p.sentCity ?? 'Unknown City'}",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
             const SizedBox(height: 10),
             Text("Topic: ${p.topic}"),
             Text("Recipient: ${p.receiverName}"),
             const SizedBox(height: 10),
-            Text("Status: ${p.status.toUpperCase()}", 
-              style: TextStyle(color: p.status == 'received' ? Colors.pink : Colors.green)),
+            Text(
+              "Status: ${p.status.toUpperCase()}",
+              style: TextStyle(
+                color: p.status == 'received' ? Colors.pink : Colors.green,
+              ),
+            ),
           ],
         ),
       ),

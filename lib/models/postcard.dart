@@ -8,11 +8,11 @@ class Postcard {
   final String status; // 'pending', 'sent', 'received'
   final DateTime? requestDate;
   final DateTime? sentDate;
-  
+
   // --- 新增地圖相關欄位 ---
-  final double? lat;       // 緯度
-  final double? lng;       // 經度
-  final String? sentCity;  // 寄出的城市名稱 (例如: "Tokyo, Japan")
+  final double? lat; // 緯度
+  final double? lng; // 經度
+  final String? sentCity; // 寄出的城市名稱 (例如: "Tokyo, Japan")
 
   Postcard({
     required this.id,
@@ -31,9 +31,9 @@ class Postcard {
     Map data = doc.data() as Map;
     return Postcard(
       id: doc.id,
-      receiverName: data['receiverName'] ?? '',
+      receiverName: data['receiverName'] ?? 'Anonymous',
       address: data['address'] ?? '',
-      topic: data['topic'] ?? '',
+      topic: data['topic'] ?? 'General',
       status: data['status'] ?? 'pending',
       requestDate: (data['requestDate'] as Timestamp?)?.toDate(),
       sentDate: (data['sentDate'] as Timestamp?)?.toDate(),

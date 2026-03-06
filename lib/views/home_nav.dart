@@ -21,12 +21,12 @@ class _HomeNavState extends State<HomeNav> {
         onDestinationSelected: (i) => setState(() => _idx = i),
         destinations: const [
           NavigationDestination(
-            icon: Icon(Icons.send_rounded), 
+            icon: Icon(Icons.send_rounded),
             label: "Request",
             selectedIcon: Icon(Icons.mail_rounded, color: Colors.amber),
           ),
           NavigationDestination(
-            icon: Icon(Icons.map_outlined), 
+            icon: Icon(Icons.map_outlined),
             label: "Track",
             selectedIcon: Icon(Icons.map_rounded, color: Colors.amber),
           ),

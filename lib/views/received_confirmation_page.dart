@@ -5,7 +5,8 @@ class ReceivedConfirmationPage extends StatefulWidget {
   const ReceivedConfirmationPage({super.key});
 
   @override
-  State<ReceivedConfirmationPage> createState() => _ReceivedConfirmationPageState();
+  State<ReceivedConfirmationPage> createState() =>
+      _ReceivedConfirmationPageState();
 }
 
 class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
@@ -54,36 +55,43 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
           child: _isProcessing
               ? const CircularProgressIndicator()
               : _error != null
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.error_outline, size: 80, color: Colors.red),
-                        const SizedBox(height: 20),
-                        Text(_error!, style: const TextStyle(fontSize: 18)),
-                      ],
-                    )
-                  : Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.favorite, size: 100, color: Colors.pink),
-                        const SizedBox(height: 20),
-                        const Text(
-                          "You made my day!",
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          "I'm so happy to know the postcard reached you safely. Thank you for being part of this journey!",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 16),
-                        ),
-                        const SizedBox(height: 40),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pushNamed(context, '/'),
-                          child: const Text("View All Journeys"),
-                        ),
-                      ],
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 80,
+                      color: Colors.red,
                     ),
+                    const SizedBox(height: 20),
+                    Text(_error!, style: const TextStyle(fontSize: 18)),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.favorite, size: 100, color: Colors.pink),
+                    const SizedBox(height: 20),
+                    const Text(
+                      "You made my day!",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "I'm so happy to know the postcard reached you safely. Thank you for being part of this journey!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                    const SizedBox(height: 40),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pushNamed(context, '/'),
+                      child: const Text("View All Journeys"),
+                    ),
+                  ],
+                ),
         ),
       ),
     );

@@ -17,9 +17,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final error = await auth.login(_email.text, _pw.text);
     if (error == null && mounted) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const AdminDashboard()));
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const AdminDashboard()),
+      );
     } else if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error!)));
     }
   }
 
@@ -31,8 +36,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            TextField(controller: _email, decoration: const InputDecoration(labelText: "Email")),
-            TextField(controller: _pw, obscureText: true, decoration: const InputDecoration(labelText: "Password")),
+            TextField(
+              controller: _email,
+              decoration: const InputDecoration(labelText: "Email"),
+            ),
+            TextField(
+              controller: _pw,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: "Password"),
+            ),
             const SizedBox(height: 30),
             ElevatedButton(onPressed: _handleLogin, child: const Text("Login")),
           ],

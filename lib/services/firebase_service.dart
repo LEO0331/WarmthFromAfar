@@ -6,31 +6,38 @@ class FirebaseService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // 修改後的更新狀態方法
-Future<void> markAsSent(String id, {required double lat, required double lng, required String city}) async {
-  await _db.collection('postcards').doc(id).update({
-    'status': 'sent',
-    'lat': lat,
-    'lng': lng,
-    'sentCity': city,
-    'sentDate': FieldValue.serverTimestamp(),
-  });
-}
+  Future<void> markAsSent(
+    String id, {
+    required double lat,
+    required double lng,
+    required String city,
+  }) async {
+    await _db.collection('postcards').doc(id).update({
+      'status': 'sent',
+      'lat': lat,
+      'lng': lng,
+      'sentCity': city,
+      'sentDate': FieldValue.serverTimestamp(),
+    });
+  }
 
-Future<void> updateStatusWithLocation(
-  String id, 
-  String newStatus, 
-  {double? lat, double? lng, String? city}
-) async {
-  if (FirebaseAuth.instance.currentUser == null) return;
-  
-  await _db.collection('postcards').doc(id).update({
-    'status': newStatus,
-    'lat': lat,
-    'lng': lng,
-    'sentCity': city,
-    'sentDate': newStatus == 'sent' ? FieldValue.serverTimestamp() : null,
-  });
-}
+  Future<void> updateStatusWithLocation(
+    String id,
+    String newStatus, {
+    double? lat,
+    double? lng,
+    String? city,
+  }) async {
+    if (FirebaseAuth.instance.currentUser == null) return;
+
+    await _db.collection('postcards').doc(id).update({
+      'status': newStatus,
+      'lat': lat,
+      'lng': lng,
+      'sentCity': city,
+      'sentDate': newStatus == 'sent' ? FieldValue.serverTimestamp() : null,
+    });
+  }
 
   // 使用者提交請求
   Future<void> addRequest(String name, String address, String topic) async {
@@ -45,10 +52,14 @@ Future<void> updateStatusWithLocation(
 
   // 監聽所有明信片進度 (公開)
   Stream<List<Postcard>> getPublicPostcards() {
-    return _db.collection('postcards')
+    return _db
+        .collection('postcards')
         .orderBy('requestDate', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Postcard.fromFirestore(doc)).toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => Postcard.fromFirestore(doc)).toList(),
+        );
   }
 
   // 管理員更新狀態

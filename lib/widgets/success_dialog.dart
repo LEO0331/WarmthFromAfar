@@ -12,17 +12,28 @@ class SuccessDialog extends StatelessWidget {
         return Transform.scale(
           scale: value,
           child: AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.mail_outline, size: 80, color: Colors.amber),
                 const SizedBox(height: 20),
-                const Text("Warmth Sent!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Warmth Sent!",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 10),
-                const Text("Your request is in my journey list.\nI'll write it when I reach the next city.", textAlign: TextAlign.center),
+                const Text(
+                  "Your request is in my journey list.\nI'll write it when I reach the next city.",
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 20),
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text("Can't wait!")),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Can't wait!"),
+                ),
               ],
             ),
           ),

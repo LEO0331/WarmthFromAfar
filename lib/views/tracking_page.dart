@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../models/postcard.dart';
-import '../widgets/postcard_card.dart'; // 使用我們寫好的漂亮卡片
-import 'tracking_map_view.dart';       // 剛才建立的地圖視圖
+import '../widgets/postcard_card.dart';
 
 class TrackingPage extends StatefulWidget {
   const TrackingPage({super.key});
@@ -12,45 +11,129 @@ class TrackingPage extends StatefulWidget {
 }
 
 class _TrackingPageState extends State<TrackingPage> {
-  bool _isMapView = false; // 切換狀態
+  String _searchQuery = "";
+  bool _showOnlySentOrReceived = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // 在內層加入一個小 AppBar 用於切換視圖
-      appBar: AppBar(
-        title: const Text("Journey Tracker", style: TextStyle(fontSize: 16)),
-        actions: [
-          IconButton(
-            icon: Icon(_isMapView ? Icons.view_list_rounded : Icons.map_rounded),
-            tooltip: _isMapView ? "Switch to List" : "Switch to Map",
-            onPressed: () => setState(() => _isMapView = !_isMapView),
-          ),
+    return StreamBuilder<List<Postcard>>(
+      stream: FirebaseService().getPublicPostcards(), // 建議在此處 limit(50) 或不限
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+
+        final allData = snapshot.data!;
+
+        // 1. 計算統計數字
+        final sentCount = allData.where((p) => p.status == 'sent').length;
+        final receivedCount = allData
+            .where((p) => p.status == 'received')
+            .length;
+        final pendingCount = allData.where((p) => p.status == 'pending').length;
+
+        // 2. 根據過濾器與搜尋過濾資料
+        final filteredData = allData.where((p) {
+          // ignore: dead_null_aware_expression, dead_code
+          final String name = p.receiverName ?? "";
+          final String searchKey = _searchQuery;
+
+          final matchesSearch = name.toLowerCase().contains(
+            searchKey.toLowerCase(),
+          );
+
+          if (_showOnlySentOrReceived) {
+            return matchesSearch &&
+                (p.status == 'sent' || p.status == 'received');
+          }
+          return matchesSearch;
+        }).toList();
+
+        return Column(
+          children: [
+            // --- 統計數字區塊 ---
+            _buildStatisticsHeader(sentCount, receivedCount, pendingCount),
+
+            // --- 搜尋與過濾控制列 ---
+            _buildFilterBar(),
+
+            // --- 列表內容 ---
+            Expanded(
+              child: filteredData.isEmpty
+                  ? const Center(child: Text("No matching records found."))
+                  : ListView.builder(
+                      itemCount: filteredData.length,
+                      itemBuilder: (context, i) =>
+                          PostcardCard(postcard: filteredData[i]),
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildStatisticsHeader(int sent, int received, int pending) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      color: Colors.amber.shade50,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _statItem("✈️ Sent", sent.toString(), Colors.green),
+          _statItem("❤️ Received", received.toString(), Colors.pink),
+          _statItem("⏳ Pending", pending.toString(), Colors.orange),
         ],
       ),
-      body: StreamBuilder<List<Postcard>>(
-        stream: FirebaseService().getPublicPostcards(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          
-          final allPostcards = snapshot.data!;
-          
-          if (_isMapView) {
-            // 顯示地圖視圖
-            return WanderMap(postcards: allPostcards);
-          } else {
-            // 顯示原本的列表視圖
-            if (allPostcards.isEmpty) {
-              return const Center(child: Text("No postcards yet. Be the first!"));
-            }
-            return ListView.builder(
-              itemCount: allPostcards.length,
-              itemBuilder: (context, i) {
-                return PostcardCard(postcard: allPostcards[i]);
-              },
-            );
-          }
-        },
+    );
+  }
+
+  Widget _statItem(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          TextField(
+            onChanged: (val) => setState(() => _searchQuery = val),
+            decoration: InputDecoration(
+              hintText: "Search your nickname...",
+              prefixIcon: const Icon(Icons.search),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            ),
+          ),
+          Row(
+            children: [
+              const Text(
+                "View Sent/Received Only",
+                style: TextStyle(fontSize: 13),
+              ),
+              Switch(
+                value: _showOnlySentOrReceived,
+                onChanged: (val) =>
+                    setState(() => _showOnlySentOrReceived = val),
+                activeThumbColor: Colors.amber,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
