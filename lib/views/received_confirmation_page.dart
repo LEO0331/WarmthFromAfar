@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
 
 class ReceivedConfirmationPage extends StatefulWidget {
@@ -40,6 +41,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
     try {
       await FirebaseService().updateStatus(docId, 'received');
       if (mounted) {
+        HapticFeedback.heavyImpact(); // 成功回報時的重擊感震動
         setState(() {
           _isProcessing = false;
           _isSuccess = true;

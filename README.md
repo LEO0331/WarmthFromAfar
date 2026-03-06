@@ -55,3 +55,24 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 ## 🌍 How to Participate
 1.  **Request**: Visit the [Live Demo](https://leo0331.github.io/WarmthFromAfar/) and fill out the form.
 2.  **Confirm**: Once received, visit the [Arrival Page](https://leo0331.github.io/WarmthFromAfar/#/received) and enter your ID to share the joy!
+
+## 📱 Install as a Mobile App (PWA)
+
+WanderStamp is a **Progressive Web App (PWA)**. You can install it on your phone without downloading from the App Store or Google Play.
+
+### For Android (Chrome)
+1. Open the [Live Demo](https://leo0331.github.io/WarmthFromAfar/) in Chrome.
+2. Tap the **three dots (⋮)** in the top-right corner.
+3. Select **"Install app"** or **"Add to Home screen"**.
+4. The **WanderStamp** icon will appear on your home screen!
+
+### For iOS (Safari)
+1. Open the [Live Demo](https://leo0331.github.io/WarmthFromAfar/) in Safari.
+2. Tap the **Share** button (square with an up arrow) at the bottom.
+3. Scroll down and tap **"Add to Home Screen"**.
+4. Tap **Add** in the top-right corner.
+
+## ✨ Mobile Experience
+*   **Haptic Feedback**: Enjoy tactile vibrations when submitting requests or confirming arrivals.
+*   **Standalone Mode**: Once installed, the browser address bar is hidden for a true app-like experience.
+*   **Offline Ready**: Core features remain accessible even with a spotty travel connection.

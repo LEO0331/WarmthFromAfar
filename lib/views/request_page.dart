@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
 import '../widgets/success_dialog.dart';
 
@@ -47,7 +48,7 @@ class _RequestPageState extends State<RequestPage> {
     );
 
     if (!mounted) return;
-
+    HapticFeedback.vibrate(); // 提交成功後的紮實震動
     // 2. 將 docId 傳給 SuccessDialog 顯示序號
     showDialog(
       context: context,
@@ -94,8 +95,10 @@ class _RequestPageState extends State<RequestPage> {
           GestureDetector(
             onTap: () {
               _tapCount++;
+              HapticFeedback.lightImpact(); // 每點一次給一個微弱震動
               if (_tapCount == 5) {
                 _tapCount = 0;
+                HapticFeedback.mediumImpact(); // 成功進入時給一個明顯震動
                 Navigator.pushNamed(context, '/admin-login');
               }
             },
