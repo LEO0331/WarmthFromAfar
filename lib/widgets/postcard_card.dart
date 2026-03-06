@@ -86,6 +86,18 @@ class PostcardCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if (postcard.status == 'received') ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+                        label: const Text("Delete Record (Privacy Clean)"),
+                        style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                        onPressed: () => _confirmDelete(context, postcard.id),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -221,4 +233,25 @@ class PostcardCard extends StatelessWidget {
         );
     }
   }
+}
+
+void _confirmDelete(BuildContext context, String id) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Confirm Deletion?"),
+      content: const Text("This will permanently remove the address and record from the database for privacy."),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+          onPressed: () async {
+            await FirebaseService().deletePostcard(id);
+            if (context.mounted) Navigator.pop(ctx);
+          },
+          child: const Text("Delete Now"),
+        ),
+      ],
+    ),
+  );
 }

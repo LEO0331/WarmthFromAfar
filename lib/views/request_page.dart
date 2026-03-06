@@ -123,8 +123,8 @@ class _RequestPageState extends State<RequestPage> {
             controller: _addressController,
             maxLines: 3,
             decoration: _buildInputDecoration(
-              "Full Shipping Address",
-              "Include postal code and country",
+              "Mailing Address",
+              "An address you are comfortable to share with",
               Icons.home_outlined,
             ),
           ),
@@ -132,7 +132,7 @@ class _RequestPageState extends State<RequestPage> {
 
           // 下拉選單
           DropdownButtonFormField<String>(
-            initialValue: _selectedTopic, // 確保這裡是 value 而非 initialValue
+            initialValue: _selectedTopic, 
             hint: const Text("Select a Message Topic"),
             items: _topics
                 .map((t) => DropdownMenuItem(value: t, child: Text(t)))
