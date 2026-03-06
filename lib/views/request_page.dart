@@ -97,6 +97,7 @@ class _RequestPageState extends State<RequestPage> {
             decoration: const InputDecoration(
               labelText: "Full Shipping Address", 
               hintText: "Include postal code and country",
+              hintStyle: TextStyle(color: Color.fromARGB(255, 186, 182, 182), fontSize: 14),
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.home_outlined),
             ),

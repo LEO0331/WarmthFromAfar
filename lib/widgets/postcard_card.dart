@@ -83,62 +83,63 @@ class PostcardCard extends StatelessWidget {
   // --- 邏輯：處理定位並更新 Firebase ---
   Future<void> _handleMarkAsSent(BuildContext context) async {
   try {
-    // 檢查服務是否開啟
-    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please enable location services.")),
-        );
-      }
-      return;
-    }
-
-    // 請求權限
+    // 1. 檢查權限 (這會觸發瀏覽器權限彈窗)
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) return; // 使用者拒絕
     }
 
-    // 設定最新的 LocationSettings (解決 Deprecated 警告)
-    const LocationSettings locationSettings = LocationSettings(
-      accuracy: LocationAccuracy.medium,
-    );
-
-    // 獲取座標
+    // 2. 獲取座標 (加上 timeout 防止 Web 卡死)
     Position position = await Geolocator.getCurrentPosition(
-      locationSettings: locationSettings,
-    );
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+    ).timeout(const Duration(seconds: 10));
 
-    // 逆向地理編碼 (座標轉城市)
-    String cityName = "Unknown Location";
+    // 3. 處理城市名稱 (解決 Geocoding null 錯誤)
+    String cityName = "Traveling...";
     try {
+      // 在 Web 上 placemarkFromCoordinates 常回傳空 list 或 null
       List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude, position.longitude);
+      
       if (placemarks.isNotEmpty) {
         final p = placemarks.first;
-        cityName = "${p.locality ?? ''}, ${p.country ?? ''}";
+        // 增加 null check，避免 "Unexpected null value"
+        final locality = p.locality ?? "";
+        final country = p.country ?? "";
+        cityName = (locality.isNotEmpty && country.isNotEmpty) 
+                   ? "$locality, $country" 
+                   : (p.name ?? "Unknown Location");
+      } else {
+        // 如果抓不到地名，就顯示簡短座標
+        cityName = "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
       }
     } catch (e) {
-      debugPrint("Geocoding failed: $e");
+      // 捕捉 Geocoding 錯誤，避免中斷主流程
+      cityName = "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
+      debugPrint("Geocoding ignored: $e");
     }
 
-    // 更新 Firebase
+    // 4. 更新 Firebase (確保 Service 裡有這個方法)
     await FirebaseService().updateStatusWithLocation(
       postcard.id,
       'sent',
-      lat: null, // 既然不用地圖標記，我們可以存 null
-      lng: null,
+      lat: position.latitude,
+      lng: position.longitude,
       city: cityName,
     );
 
+    // 5. 最後才顯示 SnackBar，避免 RenderBox size 衝突
     if (context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar(); // 先隱藏舊的
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Sent from $cityName! 📮")),
+        SnackBar(content: Text("Marked as sent from $cityName! 📮")),
       );
     }
   } catch (e) {
-    debugPrint("Location Error: $e");
+    debugPrint("MarkAsSent Error: $e");
+    // 保底：定位失敗時至少要能標記寄出
+    //await FirebaseService().updateStatus(postcard.id, 'sent');
     // ignore: use_build_context_synchronously
     await _updateWithoutLocation(context);
   }

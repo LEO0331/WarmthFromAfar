@@ -19,7 +19,7 @@ class WanderMap extends StatelessWidget {
       body: FlutterMap(
         options: MapOptions(
           // 預設中心點 (世界地圖中心)
-          initialCenter: const LatLng(20.0, 0.0),
+          initialCenter: const LatLng(25.0330, 121.5654),
           initialZoom: 2.5,
           // 限制最小縮放，避免地圖重複
           minZoom: 2.0,
@@ -28,8 +28,11 @@ class WanderMap extends StatelessWidget {
         children: [
           // 2. 設定圖層 (OpenStreetMap 免費圖資)
           TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org{z}/{x}/{y}.png',
-            userAgentPackageName: 'com.yourname.wanderstamp',
+            // 使用 CartoDB 伺服器，它對 Web 端的連線限制最少
+  urlTemplate: 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+  subdomains: ['a','b','c','d'],
+            userAgentPackageName: 'com.leo.warmthfromafar', 
+            tileProvider: NetworkTileProvider(), 
           ),
           
           // 3. 渲染標記圖層
