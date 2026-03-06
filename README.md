@@ -47,6 +47,7 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 ### 2. Admin Dashboard
 ![Demo3](assets/screenshots/demo7.png)
 ![Demo4](assets/screenshots/demo4.png)
+![Demo7](assets/screenshots/demo10.png)
 
 ### 3. Received Page
 ![Demo5](assets/screenshots/demo8.png)
