@@ -132,7 +132,7 @@ class _RequestPageState extends State<RequestPage> {
 
           // 下拉選單
           DropdownButtonFormField<String>(
-            value: _selectedTopic, // 確保這裡是 value 而非 initialValue
+            initialValue: _selectedTopic, // 確保這裡是 value 而非 initialValue
             hint: const Text("Select a Message Topic"),
             items: _topics
                 .map((t) => DropdownMenuItem(value: t, child: Text(t)))

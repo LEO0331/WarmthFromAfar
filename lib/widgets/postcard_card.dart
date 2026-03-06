@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import '../models/postcard.dart';
@@ -25,7 +23,7 @@ class PostcardCard extends StatelessWidget {
         title: Text("To: ${postcard.receiverName}"),
         subtitle: Text(
           postcard.status == 'sent' && postcard.sentCity != null
-              ? "From: ${postcard.sentCity}" // 寄出後顯示城市名
+              ? "From: ${postcard.sentCity}"
               : "Topic: ${postcard.topic}",
         ),
         children: [
@@ -36,46 +34,58 @@ class PostcardCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("🆔 WARMTH ID:", style: TextStyle(fontWeight: FontWeight.bold)),
+                      SelectableText(
+                        "W-${postcard.id.substring(postcard.id.length - 4).toUpperCase()}",
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   const Text(
                     "📦 SHIPPING ADDRESS:",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
                   ),
                   const SizedBox(height: 5),
                   SelectableText(
                     postcard.address,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      backgroundColor: Colors.yellow,
-                    ),
+                    style: const TextStyle(fontSize: 16, backgroundColor: Colors.yellow),
                   ),
                   const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      // --- 替換後的定位寄出按鈕 ---
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.location_on),
-                        label: const Text("Locate & Send"),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber.shade100,
-                          foregroundColor: Colors.orange.shade900,
-                        ),
-                        onPressed: () => _handleMarkAsSent(context),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.location_on),
+                      label: const Text("Locate & Send"),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber.shade100,
+                        foregroundColor: Colors.orange.shade900,
                       ),
-                      const SizedBox(width: 10),
-                      // --- QR Code 標籤按鈕 ---
-                      IconButton(
-                        icon: const Icon(
-                          Icons.qr_code_scanner,
-                          color: Colors.blueGrey,
-                        ),
-                        tooltip: "Generate QR Label",
-                        onPressed: () => _showQRDialog(context),
-                      ),
-                    ],
+                      onPressed: () => _handleMarkAsSent(context),
+                    ),
                   ),
+                  if (postcard.status == 'sent') ...[
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        icon: const Icon(Icons.check_circle_outline, color: Colors.pink),
+                        label: const Text("Manual Mark as Received"),
+                        style: OutlinedButton.styleFrom(foregroundColor: Colors.pink),
+                        onPressed: () async {
+                          await FirebaseService().updateStatus(postcard.id, 'received');
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("Updated to Received ❤️")),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -85,11 +95,35 @@ class PostcardCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Status: ${postcard.status.toUpperCase()}"),
-                  if (postcard.sentDate != null)
+                  // 顯示狀態文字
+                  Text(
+                    "Status: ${postcard.status.toUpperCase()}",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: _getStatusColor(postcard.status),
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  
+                  // --- 新增：顯示申請日期 ---
+                  if (postcard.requestDate != null)
                     Text(
-                      "Sent on: ${postcard.sentDate.toString().substring(0, 10)}",
+                      "Requested on: ${postcard.requestDate!.toString().substring(0, 10)}",
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+
+                  // 顯示寄出日期與城市
+                  if (postcard.status == 'sent' && postcard.sentDate != null)
+                    Text(
+                      "Sent on: ${postcard.sentDate.toString().substring(0, 10)} ${postcard.sentCity != null ? 'from ${postcard.sentCity}' : ''}",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    
+                  // 顯示到達鼓勵文字
+                  if (postcard.status == 'received')
+                    const Text(
+                      "Arrived safely! ❤️",
+                      style: TextStyle(fontSize: 12, color: Colors.pink, fontWeight: FontWeight.bold),
                     ),
                 ],
               ),
@@ -99,53 +133,46 @@ class PostcardCard extends StatelessWidget {
     );
   }
 
-  // --- 邏輯：處理定位並更新 Firebase ---
+  Color _getStatusColor(String status) {
+    if (status == 'received') return Colors.pink;
+    if (status == 'sent') return Colors.green;
+    return Colors.orange;
+  }
+
   Future<void> _handleMarkAsSent(BuildContext context) async {
     try {
-      // 1. 檢查權限 (這會觸發瀏覽器權限彈窗)
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return; // 使用者拒絕
+        if (permission == LocationPermission.denied) return;
       }
 
-      // 2. 獲取座標 (加上 timeout 防止 Web 卡死)
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.medium,
-        ),
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
       ).timeout(const Duration(seconds: 10));
 
-      // 3. 處理城市名稱 (解決 Geocoding null 錯誤)
-      String cityName = "Traveling...";
+      // 預設城市名稱為經緯度，防止 Geocoding 失敗
+      String cityName = "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
+      
       try {
-        // 在 Web 上 placemarkFromCoordinates 常回傳空 list 或 null
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
           position.longitude,
-        );
+        ).timeout(const Duration(seconds: 5)); // 增加超時保護
 
         if (placemarks.isNotEmpty) {
           final p = placemarks.first;
-          // 增加 null check，避免 "Unexpected null value"
           final locality = p.locality ?? "";
           final country = p.country ?? "";
-          cityName = (locality.isNotEmpty && country.isNotEmpty)
-              ? "$locality, $country"
-              : (p.name ?? "Unknown Location");
-        } else {
-          // 如果抓不到地名，就顯示簡短座標
-          cityName =
-              "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
+          if (locality.isNotEmpty || country.isNotEmpty) {
+            cityName = "$locality, $country";
+          }
         }
       } catch (e) {
-        // 捕捉 Geocoding 錯誤，避免中斷主流程
-        cityName =
-            "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
+        // Geocoding 失敗時，cityName 維持經緯度字串，不會報 Unexpected null value
         debugPrint("Geocoding ignored: $e");
       }
 
-      // 4. 更新 Firebase (確保 Service 裡有這個方法)
       await FirebaseService().updateStatusWithLocation(
         postcard.id,
         'sent',
@@ -154,23 +181,18 @@ class PostcardCard extends StatelessWidget {
         city: cityName,
       );
 
-      // 5. 最後才顯示 SnackBar，避免 RenderBox size 衝突
       if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentSnackBar(); // 先隱藏舊的
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Marked as sent from $cityName! 📮")),
         );
       }
     } catch (e) {
       debugPrint("MarkAsSent Error: $e");
-      // 保底：定位失敗時至少要能標記寄出
-      //await FirebaseService().updateStatus(postcard.id, 'sent');
-      // ignore: use_build_context_synchronously
-      await _updateWithoutLocation(context);
+      if (context.mounted) await _updateWithoutLocation(context);
     }
   }
 
-  // 輔助方法：當定位失敗時的保底更新
   Future<void> _updateWithoutLocation(BuildContext context) async {
     await FirebaseService().updateStatus(postcard.id, 'sent');
     if (context.mounted) {
@@ -178,56 +200,6 @@ class PostcardCard extends StatelessWidget {
         const SnackBar(content: Text("Marked as sent (Location skipped).")),
       );
     }
-  }
-
-  // --- 邏輯：顯示 QR Code 對話框 ---
-  void _showQRDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Postcard QR Label"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            QrImageView(
-              // 替換為你的網址
-              data: "https://your-username.github.io{postcard.id}",
-              version: QrVersions.auto,
-              size: 200.0,
-              gapless: false,
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "Scan to mark as 'Received'",
-              style: TextStyle(fontSize: 12),
-            ),
-            SelectableText(
-              "ID: ${postcard.id}",
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Clipboard.setData(
-                ClipboardData(
-                  text: "https://your-username.github.io{postcard.id}",
-                ),
-              );
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text("Link Copied!")));
-            },
-            child: const Text("Copy Link"),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _getStatusIcon() {
