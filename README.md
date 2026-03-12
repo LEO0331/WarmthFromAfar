@@ -52,6 +52,9 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 ### 3. Received Page
 ![Demo5](assets/screenshots/demo8.png)
 
+### 4. Test Coverage
+![Demo12](assets/screenshots/demo12.png)
+
 ## 🌍 How to Participate
 1.  **Request**: Visit the [Live Demo](https://leo0331.github.io/WarmthFromAfar/) and fill out the form.
 2.  **Confirm**: Once received, visit the [Arrival Page](https://leo0331.github.io/WarmthFromAfar/#/received) and enter your ID to share the joy!
