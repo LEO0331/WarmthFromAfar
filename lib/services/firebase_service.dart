@@ -4,12 +4,33 @@ import 'package:flutter/material.dart'; // 加入用於 debugPrint
 import '../models/postcard.dart';
 
 class FirebaseService {
-  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static FirebaseService _instance = FirebaseService._internal();
+
+  factory FirebaseService() {
+    return _instance;
+  }
+
+  final FirebaseFirestore _db;
+  final FirebaseAuth _auth;
+
+  FirebaseService._internal({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _db = firestore ?? FirebaseFirestore.instance,
+        _auth = auth ?? FirebaseAuth.instance;
+
+  @visibleForTesting
+  factory FirebaseService.forTest({FirebaseFirestore? firestore, FirebaseAuth? auth}) {
+    return FirebaseService._internal(firestore: firestore, auth: auth);
+  }
+
+  @visibleForTesting
+  static void setMockInstance(FirebaseService mock) {
+    _instance = mock;
+  }
 
   // 1. [新增] 管理員手動刪除紀錄 (隱私清理)
   Future<void> deletePostcard(String id) async {
     // 安全檢查：確保只有登入的管理員可以執行
-    if (FirebaseAuth.instance.currentUser == null) return;
+    if (_auth.currentUser == null) return;
 
     try {
       await _db.collection('postcards').doc(id).delete();
@@ -51,7 +72,7 @@ class FirebaseService {
     double? lng,
     String? city,
   }) async {
-    if (FirebaseAuth.instance.currentUser == null) return;
+    if (_auth.currentUser == null) return;
 
     await _db.collection('postcards').doc(id).update({
       'status': newStatus,
@@ -80,5 +101,19 @@ class FirebaseService {
     required String city,
   }) async {
     await updateStatusWithLocation(id, 'sent', lat: lat, lng: lng, city: city);
+  }
+
+  // 6. 搜尋特定短 ID 的明信片
+  Future<Postcard?> getPostcardByShortId(String shortId) async {
+    final query = shortId.toUpperCase();
+    final snapshot = await _db.collection('postcards').get();
+    try {
+      final doc = snapshot.docs.firstWhere(
+        (d) => d.id.toUpperCase().endsWith(query),
+      );
+      return Postcard.fromFirestore(doc);
+    } catch (e) {
+      return null;
+    }
   }
 }

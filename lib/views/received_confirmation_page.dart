@@ -68,15 +68,13 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
 
     try {
       // 搜尋 Firestore 找到 ID 後四碼匹配的文件
-      final snapshot = await FirebaseFirestore.instance
-          .collection('postcards')
-          .get();
+      final postcard = await FirebaseService().getPostcardByShortId(input);
       
-      final doc = snapshot.docs.firstWhere(
-        (d) => d.id.toUpperCase().endsWith(input),
-      );
+      if (postcard == null) {
+        throw Exception("Not found");
+      }
 
-      await _processConfirmation(doc.id);
+      await _processConfirmation(postcard.id);
     } catch (e) {
       if (mounted) {
         setState(() {

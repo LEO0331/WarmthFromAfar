@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _auth;
   User? _user;
 
   User? get user => _user;
   bool get isAdmin => _user != null;
 
-  AuthProvider() {
+  AuthProvider({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance {
     _auth.authStateChanges().listen((User? user) {
       _user = user;
       notifyListeners();

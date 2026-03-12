@@ -46,3 +46,7 @@ app.*.map.json
 *.keystore / *.jks
 service-account-key.json
 ios/Runner/GoogleService-Info.plist
+android/app/google-services.json
+macos/Runner/GoogleService-Info.plist
+firebase.json
+.firebaserc

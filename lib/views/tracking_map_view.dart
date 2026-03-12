@@ -41,8 +41,8 @@ class WanderMap extends StatelessWidget {
             markers: markersData.map((p) {
               return Marker(
                 point: LatLng(p.lat!, p.lng!),
-                width: 50,
-                height: 50,
+                width: 60,
+                height: 60,
                 child: GestureDetector(
                   onTap: () => _showPostcardInfo(context, p),
                   child: _buildMarkerIcon(p.status),
