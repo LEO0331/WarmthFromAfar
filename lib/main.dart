@@ -8,19 +8,25 @@ import 'views/request_page.dart';
 import 'views/tracking_page.dart';
 import 'views/admin/admin_login.dart';
 
+typedef EnsureInitializedFn = WidgetsBinding Function();
+typedef InitializeFirebaseFn =
+    Future<FirebaseApp> Function({String? name, FirebaseOptions? options});
+typedef RunAppFn = void Function(Widget app);
+
+Future<void> bootstrapApp({
+  EnsureInitializedFn ensureInitialized =
+      WidgetsFlutterBinding.ensureInitialized,
+  InitializeFirebaseFn initializeFirebase = Firebase.initializeApp,
+  RunAppFn runAppFn = runApp,
+  Widget app = const WanderStampApp(),
+}) async {
+  ensureInitialized();
+  await initializeFirebase(options: DefaultFirebaseOptions.currentPlatform);
+  runAppFn(ChangeNotifierProvider(create: (_) => AuthProvider(), child: app));
+}
+
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // 初始化 Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  runApp(
-    // 使用 MultiProvider 或單一 Provider 包裹 App
-    ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
-      child: const WanderStampApp(),
-    ),
-  );
+  await bootstrapApp();
 }
 
 class WanderStampApp extends StatelessWidget {
