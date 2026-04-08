@@ -13,8 +13,11 @@ class SuccessDialog extends StatelessWidget {
     final String shortId = docId.length >= 4
         ? docId.substring(docId.length - 4).toUpperCase()
         : docId.toUpperCase();
-    final String deepLink =
-        "${Uri.base.origin}${Uri.base.path}#/received?id=$docId";
+    final Uri base = Uri.base;
+    final bool isHttp = base.scheme == 'http' || base.scheme == 'https';
+    final String deepLink = isHttp
+        ? "${base.origin}${base.path}#/received?id=$docId"
+        : "#/received?id=$docId";
 
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
