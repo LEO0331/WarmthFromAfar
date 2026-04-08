@@ -5,8 +5,10 @@ import '../models/postcard.dart';
 
 class WanderMap extends StatelessWidget {
   final List<Postcard> postcards;
+  final TileProvider tileProvider;
 
-  const WanderMap({super.key, required this.postcards});
+  WanderMap({super.key, required this.postcards, TileProvider? tileProvider})
+    : tileProvider = tileProvider ?? NetworkTileProvider();
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class WanderMap extends StatelessWidget {
                 'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
             subdomains: ['a', 'b', 'c', 'd'],
             userAgentPackageName: 'com.leo.warmthfromafar',
-            tileProvider: NetworkTileProvider(),
+            tileProvider: tileProvider,
           ),
 
           // 3. 渲染標記圖層

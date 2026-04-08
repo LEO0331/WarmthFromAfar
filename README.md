@@ -1,4 +1,5 @@
 # 📮 WanderStamp
+[![Deploy to GitHub Pages](https://github.com/leo0331/WarmthFromAfar/actions/workflows/deploy.yml/badge.svg)](https://github.com/leo0331/WarmthFromAfar/actions/workflows/deploy.yml)
 
 > **"A handwritten postcard to bridge hearts—whether we are friends, acquaintances, or yet to meet."**
 

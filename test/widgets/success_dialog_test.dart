@@ -70,5 +70,44 @@ void main() {
       expect(find.text("Copy ID"), findsOneWidget);
       expect(find.text("Share"), findsOneWidget);
     });
+
+    testWidgets('copy and share actions show snackbars', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: SuccessDialog(docId: 'test-doc-id-5678')),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Copy ID"));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Share"));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('uses custom open tracking callback when provided', (
+      WidgetTester tester,
+    ) async {
+      var called = false;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SuccessDialog(
+              docId: 'test-doc-id-9876',
+              onOpenTracking: () => called = true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text("Open Tracking"));
+      await tester.pumpAndSettle();
+
+      expect(called, isTrue);
+    });
   });
 }

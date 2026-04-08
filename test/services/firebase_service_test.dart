@@ -16,6 +16,10 @@ void main() {
   });
 
   group('FirebaseService Tests', () {
+    test('forTest without args attempts default firebase instances', () {
+      expect(() => FirebaseService.forTest(), throwsA(anything));
+    });
+
     test('addRequest should add a document and return the ID', () async {
       final id = await service.addRequest('Leo', 'Address', 'Snow');
 
@@ -160,6 +164,53 @@ void main() {
       },
     );
 
+    test('updateJourneyProgress should no-op when unauthenticated', () async {
+      final docRef = await fakeFirestore.collection('postcards').add({
+        'status': 'pending',
+        'stage': 'requested',
+      });
+
+      await service.updateJourneyProgress(docRef.id, stage: 'sent');
+      final doc = await docRef.get();
+      expect(doc.data()?['stage'], 'requested');
+    });
+
+    test('updateJourneyProgress should no-op with empty payload', () async {
+      final auth = MockFirebaseAuth(signedIn: true);
+      final serviceWithAuth = FirebaseService.forTest(
+        firestore: fakeFirestore,
+        auth: auth,
+      );
+      final docRef = await fakeFirestore.collection('postcards').add({
+        'status': 'pending',
+        'stage': 'requested',
+      });
+
+      await serviceWithAuth.updateJourneyProgress(docRef.id);
+      final doc = await docRef.get();
+      expect(doc.data()?['stage'], 'requested');
+    });
+
+    test('updateJourneyProgress maps sent/received stages to status', () async {
+      final auth = MockFirebaseAuth(signedIn: true);
+      final serviceWithAuth = FirebaseService.forTest(
+        firestore: fakeFirestore,
+        auth: auth,
+      );
+      final docRef = await fakeFirestore.collection('postcards').add({
+        'status': 'pending',
+        'stage': 'requested',
+      });
+
+      await serviceWithAuth.updateJourneyProgress(docRef.id, stage: 'sent');
+      var doc = await docRef.get();
+      expect(doc.data()?['status'], 'sent');
+
+      await serviceWithAuth.updateJourneyProgress(docRef.id, stage: 'received');
+      doc = await docRef.get();
+      expect(doc.data()?['status'], 'received');
+    });
+
     test('updateReceiptFeedback should store reaction and message', () async {
       final docRef = await fakeFirestore.collection('postcards').add({
         'status': 'received',
@@ -187,6 +238,27 @@ void main() {
       expect(stats['Comfort'], 2);
       expect(stats['Inspiration'], 1);
     });
+
+    test(
+      'getPostcardByShortId returns matching postcard and null when absent',
+      () async {
+        final docRef = await fakeFirestore.collection('postcards').add({
+          'receiverName': 'Leo',
+          'address': 'Address',
+          'topic': 'Travel',
+          'status': 'pending',
+          'requestDate': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        });
+
+        final suffix = docRef.id.substring(docRef.id.length - 4).toUpperCase();
+        final found = await service.getPostcardByShortId(suffix);
+        final notFound = await service.getPostcardByShortId('ZZZZ');
+
+        expect(found, isNotNull);
+        expect(found!.id, docRef.id);
+        expect(notFound, isNull);
+      },
+    );
 
     group('markAsSent', () {
       test('should call updateStatusWithLocation', () async {
