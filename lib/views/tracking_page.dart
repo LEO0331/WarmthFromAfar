@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import '../services/firebase_service.dart';
 import '../models/postcard.dart';
 import '../widgets/postcard_card.dart';
-import 'tracking_map_view.dart'; // 確保此檔案存在
+import '../widgets/topic_insights_card.dart';
+import '../widgets/wall_of_warmth.dart';
+import 'tracking_map_view.dart';
 
 class TrackingPage extends StatefulWidget {
-  const TrackingPage({super.key});
+  final String initialSearchQuery;
+
+  const TrackingPage({super.key, this.initialSearchQuery = ""});
 
   @override
   State<TrackingPage> createState() => _TrackingPageState();
@@ -15,6 +19,20 @@ class _TrackingPageState extends State<TrackingPage> {
   String _searchQuery = "";
   bool _showOnlySentOrReceived = false;
   bool _isMapView = false; // 新增：控制目前是地圖還是列表
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchQuery = widget.initialSearchQuery;
+    _searchController = TextEditingController(text: _searchQuery);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +41,9 @@ class _TrackingPageState extends State<TrackingPage> {
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: Icon(_isMapView ? Icons.view_list_rounded : Icons.map_rounded),
+            icon: Icon(
+              _isMapView ? Icons.view_list_rounded : Icons.map_rounded,
+            ),
             tooltip: _isMapView ? "Switch to List" : "Switch to Map",
             onPressed: () => setState(() => _isMapView = !_isMapView),
           ),
@@ -65,8 +85,9 @@ class _TrackingPageState extends State<TrackingPage> {
       final String query = _searchQuery.toUpperCase();
 
       // 修正：支援暱稱搜尋或 ID 後四碼搜尋
-      final matchesSearch = name.contains(query.toLowerCase()) || 
-                            id.endsWith(query.replaceAll("W-", ""));
+      final matchesSearch =
+          name.contains(query.toLowerCase()) ||
+          id.endsWith(query.replaceAll("W-", ""));
 
       if (_showOnlySentOrReceived) {
         return matchesSearch && (p.status == 'sent' || p.status == 'received');
@@ -74,10 +95,26 @@ class _TrackingPageState extends State<TrackingPage> {
       return matchesSearch;
     }).toList();
 
+    final topicStats = <String, int>{};
+    for (final p in allData) {
+      topicStats[p.topic] = (topicStats[p.topic] ?? 0) + 1;
+    }
+    final pendingSorted = allData.where((p) => p.status == 'pending').toList()
+      ..sort((a, b) {
+        final aDate = a.requestDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate = b.requestDate ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return aDate.compareTo(bDate);
+      });
+    final queueLookup = <String, int>{
+      for (int i = 0; i < pendingSorted.length; i++) pendingSorted[i].id: i + 1,
+    };
+
     return Column(
       children: [
         // --- 統計數字區塊 ---
         _buildStatisticsHeader(sentCount, receivedCount, pendingCount),
+        TopicInsightsCard(topicStats: topicStats),
+        WallOfWarmth(postcards: allData),
 
         // --- 搜尋與過濾控制列 ---
         _buildFilterBar(),
@@ -88,7 +125,10 @@ class _TrackingPageState extends State<TrackingPage> {
               ? const Center(child: Text("No matching records found."))
               : ListView.builder(
                   itemCount: filteredData.length,
-                  itemBuilder: (context, i) => PostcardCard(postcard: filteredData[i]),
+                  itemBuilder: (context, i) => PostcardCard(
+                    postcard: filteredData[i],
+                    queuePosition: queueLookup[filteredData[i].id],
+                  ),
                 ),
         ),
       ],
@@ -114,7 +154,14 @@ class _TrackingPageState extends State<TrackingPage> {
     return Column(
       children: [
         Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-        Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: color)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
       ],
     );
   }
@@ -125,6 +172,7 @@ class _TrackingPageState extends State<TrackingPage> {
       child: Column(
         children: [
           TextField(
+            controller: _searchController,
             onChanged: (val) => setState(() => _searchQuery = val),
             decoration: InputDecoration(
               hintText: "Search nickname or ID (e.g. 8A2C)",
@@ -144,10 +192,14 @@ class _TrackingPageState extends State<TrackingPage> {
           ),
           Row(
             children: [
-              const Text("View Sent/Received Only", style: TextStyle(fontSize: 13)),
+              const Text(
+                "View Sent/Received Only",
+                style: TextStyle(fontSize: 13),
+              ),
               Switch(
                 value: _showOnlySentOrReceived,
-                onChanged: (val) => setState(() => _showOnlySentOrReceived = val),
+                onChanged: (val) =>
+                    setState(() => _showOnlySentOrReceived = val),
                 activeThumbColor: Colors.amber,
               ),
             ],

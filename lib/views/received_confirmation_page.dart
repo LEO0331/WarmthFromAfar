@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import '../services/firebase_service.dart';
 
@@ -15,7 +14,18 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
   final TextEditingController _idController = TextEditingController();
   bool _isProcessing = false;
   bool _isSuccess = false;
+  String? _confirmedDocId;
   String? _error;
+  String _reaction = "❤️";
+  bool _showOnWall = false;
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _idController.dispose();
+    _messageController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -45,6 +55,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
         setState(() {
           _isProcessing = false;
           _isSuccess = true;
+          _confirmedDocId = docId;
         });
       }
     } catch (e) {
@@ -69,7 +80,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
     try {
       // 搜尋 Firestore 找到 ID 後四碼匹配的文件
       final postcard = await FirebaseService().getPostcardByShortId(input);
-      
+
       if (postcard == null) {
         throw Exception("Not found");
       }
@@ -94,7 +105,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       // 只有當直接透過 URL 進入時才顯示 AppBar
-      appBar: Uri.base.queryParameters.containsKey('id') 
+      appBar: Uri.base.queryParameters.containsKey('id')
           ? AppBar(title: const Text("Confirm Receipt"), centerTitle: true)
           : null,
       body: Center(
@@ -103,7 +114,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (_isProcessing) 
+              if (_isProcessing)
                 const CircularProgressIndicator()
               else ...[
                 const Icon(
@@ -127,20 +138,29 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                     controller: _idController,
                     textAlign: TextAlign.center,
                     maxLength: 6,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, letterSpacing: 2),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 2,
+                    ),
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.grey.shade50,
                       hintText: "e.g. 8A2C",
                       counterText: "",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: Colors.grey.shade200),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.amber, width: 2),
+                        borderSide: const BorderSide(
+                          color: Colors.amber,
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -148,7 +168,10 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
 
                 if (_error != null) ...[
                   const SizedBox(height: 10),
-                  Text(_error!, style: const TextStyle(color: Colors.red, fontSize: 13)),
+                  Text(
+                    _error!,
+                    style: const TextStyle(color: Colors.red, fontSize: 13),
+                  ),
                 ],
 
                 const SizedBox(height: 24),
@@ -159,9 +182,14 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                     backgroundColor: Colors.amber,
                     foregroundColor: Colors.black87,
                     elevation: 0,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
                   ),
-                  child: const Text("Confirm Arrival ❤️", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "Confirm Arrival ❤️",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
               ],
             ],
@@ -192,12 +220,76 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
+              const SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                initialValue: _reaction,
+                decoration: const InputDecoration(
+                  labelText: "How did this postcard make you feel?",
+                ),
+                items: const [
+                  DropdownMenuItem(value: "❤️", child: Text("❤️ Loved it")),
+                  DropdownMenuItem(value: "😊", child: Text("😊 So warm")),
+                  DropdownMenuItem(value: "🥹", child: Text("🥹 Touched")),
+                  DropdownMenuItem(value: "🌟", child: Text("🌟 Inspired")),
+                ],
+                onChanged: (val) {
+                  if (val != null) setState(() => _reaction = val);
+                },
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _messageController,
+                maxLines: 2,
+                decoration: const InputDecoration(
+                  labelText: "One-line message (optional)",
+                  hintText: "This postcard arrived at the perfect time.",
+                ),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _showOnWall,
+                    onChanged: (v) => setState(() => _showOnWall = v ?? false),
+                  ),
+                  const Expanded(
+                    child: Text(
+                      "Allow this message to appear on the public Wall of Warmth.",
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (_confirmedDocId == null) return;
+                  await FirebaseService().updateReceiptFeedback(
+                    _confirmedDocId!,
+                    reaction: _reaction,
+                    message: _messageController.text.trim(),
+                    showOnWall: _showOnWall,
+                  );
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Feedback submitted. Thank you!"),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black87,
+                  side: BorderSide(color: Colors.amber.shade400),
+                ),
+                child: const Text("Share Feedback"),
+              ),
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
                   setState(() {
                     _isSuccess = false;
                     _idController.clear();
+                    _messageController.clear();
                   });
                   // 導回到首頁 (Request Tab)
                   Navigator.pushNamed(context, '/');
@@ -205,7 +297,9 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.amber,
                   foregroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                 ),
                 child: const Text("Back to Home"),
               ),

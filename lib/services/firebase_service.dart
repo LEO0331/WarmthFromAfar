@@ -14,11 +14,14 @@ class FirebaseService {
   final FirebaseAuth _auth;
 
   FirebaseService._internal({FirebaseFirestore? firestore, FirebaseAuth? auth})
-      : _db = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+    : _db = firestore ?? FirebaseFirestore.instance,
+      _auth = auth ?? FirebaseAuth.instance;
 
   @visibleForTesting
-  factory FirebaseService.forTest({FirebaseFirestore? firestore, FirebaseAuth? auth}) {
+  factory FirebaseService.forTest({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+  }) {
     return FirebaseService._internal(firestore: firestore, auth: auth);
   }
 
@@ -41,12 +44,25 @@ class FirebaseService {
   }
 
   // 2. 使用者提交請求 (回傳生成的 ID 用於顯示 W-XXXX 序號)
-  Future<String?> addRequest(String name, String address, String topic) async {
+  Future<String?> addRequest(
+    String name,
+    String address,
+    String topic, {
+    String requestType = 'self',
+    String? giftFromName,
+    String? giftMessage,
+    String? campaign,
+  }) async {
     DocumentReference docRef = await _db.collection('postcards').add({
       'receiverName': name,
       'address': address,
       'topic': topic,
+      'requestType': requestType,
+      'giftFromName': giftFromName,
+      'giftMessage': giftMessage,
+      'campaign': campaign,
       'status': 'pending',
+      'stage': 'requested',
       'requestDate': FieldValue.serverTimestamp(),
     });
     return docRef.id;
@@ -76,6 +92,7 @@ class FirebaseService {
 
     await _db.collection('postcards').doc(id).update({
       'status': newStatus,
+      'stage': newStatus == 'received' ? 'received' : 'sent',
       'lat': lat,
       'lng': lng,
       'sentCity': city,
@@ -89,7 +106,46 @@ class FirebaseService {
     // 但如果是管理員手動更改，建議分開邏輯或在 Rules 層面控管
     await _db.collection('postcards').doc(id).update({
       'status': newStatus,
+      'stage': newStatus == 'received' ? 'received' : 'sent',
       'sentDate': newStatus == 'sent' ? FieldValue.serverTimestamp() : null,
+    });
+  }
+
+  Future<void> updateJourneyProgress(
+    String id, {
+    String? stage,
+    String? travelerNote,
+    String? travelerPhotoUrl,
+    int? etaDays,
+  }) async {
+    if (_auth.currentUser == null) return;
+
+    final Map<String, dynamic> payload = {};
+    if (stage != null) {
+      payload['stage'] = stage;
+      if (stage == 'sent') payload['status'] = 'sent';
+      if (stage == 'received') payload['status'] = 'received';
+    }
+    if (travelerNote != null) payload['travelerNote'] = travelerNote;
+    if (travelerPhotoUrl != null) {
+      payload['travelerPhotoUrl'] = travelerPhotoUrl;
+    }
+    if (etaDays != null) payload['etaDays'] = etaDays;
+
+    if (payload.isEmpty) return;
+    await _db.collection('postcards').doc(id).update(payload);
+  }
+
+  Future<void> updateReceiptFeedback(
+    String id, {
+    required String reaction,
+    required String message,
+    required bool showOnWall,
+  }) async {
+    await _db.collection('postcards').doc(id).update({
+      'recipientReaction': reaction,
+      'recipientMessage': message,
+      'showOnWall': showOnWall,
     });
   }
 
@@ -115,5 +171,15 @@ class FirebaseService {
     } catch (e) {
       return null;
     }
+  }
+
+  Future<Map<String, int>> getTopicStats() async {
+    final snapshot = await _db.collection('postcards').get();
+    final Map<String, int> result = {};
+    for (final doc in snapshot.docs) {
+      final topic = (doc.data()['topic'] as String?) ?? 'General';
+      result[topic] = (result[topic] ?? 0) + 1;
+    }
+    return result;
   }
 }

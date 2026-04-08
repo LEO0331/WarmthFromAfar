@@ -32,26 +32,64 @@ class WanderStampApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'WanderStamp',
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.amber),
-      // 設定初始路由
       initialRoute: '/',
-      routes: {
-        '/': (context) => const MainNavigator(),
-        '/admin-login': (context) => const AdminLoginPage(),
-        '/received': (context) => const ReceivedConfirmationPage(),
+      onGenerateRoute: (settings) {
+        if (settings.name == '/admin-login') {
+          return MaterialPageRoute(builder: (_) => const AdminLoginPage());
+        }
+        if (settings.name == '/received') {
+          return MaterialPageRoute(
+            builder: (_) => const ReceivedConfirmationPage(),
+          );
+        }
+
+        int initialTab = 0;
+        String initialTrackQuery = "";
+        final args = settings.arguments;
+        if (args is Map) {
+          initialTab = (args['initialTab'] as int?) ?? 0;
+          initialTrackQuery = (args['initialTrackQuery'] as String?) ?? "";
+        }
+
+        return MaterialPageRoute(
+          builder: (_) => MainNavigator(
+            initialIndex: initialTab,
+            initialTrackingQuery: initialTrackQuery,
+          ),
+        );
       },
     );
   }
 }
 
 class MainNavigator extends StatefulWidget {
-  const MainNavigator({super.key});
+  final int initialIndex;
+  final String initialTrackingQuery;
+
+  const MainNavigator({
+    super.key,
+    this.initialIndex = 0,
+    this.initialTrackingQuery = "",
+  });
+
   @override
   State<MainNavigator> createState() => _MainNavigatorState();
 }
 
 class _MainNavigatorState extends State<MainNavigator> {
-  int _idx = 0;
-  final List<Widget> _pages = [const RequestPage(), const TrackingPage(), const ReceivedConfirmationPage(),];
+  late int _idx;
+  late final List<Widget> _pages;
+
+  @override
+  void initState() {
+    super.initState();
+    _idx = widget.initialIndex;
+    _pages = [
+      const RequestPage(),
+      TrackingPage(initialSearchQuery: widget.initialTrackingQuery),
+      const ReceivedConfirmationPage(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,8 +113,8 @@ class _MainNavigatorState extends State<MainNavigator> {
             label: "Track",
           ),
           NavigationDestination(
-            icon: Icon(Icons.volunteer_activism_rounded), 
-            label: "Received", 
+            icon: Icon(Icons.volunteer_activism_rounded),
+            label: "Received",
           ),
         ],
       ),

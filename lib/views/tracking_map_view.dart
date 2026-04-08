@@ -86,8 +86,8 @@ class WanderMap extends StatelessWidget {
 
   // 點擊標記顯示簡短資訊
   void _showPostcardInfo(BuildContext context, Postcard p) {
-    final String shortId = p.id.length >= 4 
-        ? p.id.substring(p.id.length - 4).toUpperCase() 
+    final String shortId = p.id.length >= 4
+        ? p.id.substring(p.id.length - 4).toUpperCase()
         : p.id.toUpperCase();
 
     showModalBottomSheet(
@@ -104,8 +104,10 @@ class WanderMap extends StatelessWidget {
                 color: const Color.fromARGB(255, 108, 105, 96),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Text("ID: W-$shortId", 
-                style: const TextStyle(color: Color.fromARGB(255, 56, 54, 51))),
+              child: Text(
+                "ID: W-$shortId",
+                style: const TextStyle(color: Color.fromARGB(255, 56, 54, 51)),
+              ),
             ),
             const SizedBox(height: 15),
             Text(
@@ -114,6 +116,10 @@ class WanderMap extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text("Topic: ${p.topic}"),
+            if (p.campaign != null && p.campaign!.isNotEmpty)
+              Text("Campaign: ${p.campaign}"),
+            if (p.travelerNote != null && p.travelerNote!.isNotEmpty)
+              Text("Traveler note: ${p.travelerNote}"),
             Text("Recipient: ${p.receiverName}"),
             const SizedBox(height: 10),
             Text(

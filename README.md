@@ -17,9 +17,13 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 ## ✨ Features
 
 *   **✉️ Request a Postcard**: Anyone can pick a customized topic (Inspiration, Comfort, Heartbreak Healing, etc.) and submit their mailing address safely.
+*   **🛡️ Trust-first Onboarding**: Before sharing an address, users now see how it works, privacy promises, supported regions, and expected delivery window.
+*   **🎁 Gift Mode & Campaigns**: Request postcards for yourself or as a gift, and choose themed travel campaigns.
 *   **🎈 Surprise Success UI**: A smooth, animated feedback dialog providing a **unique 4-digit Warmth ID (W-XXXX)** for tracking.
 *   **📍 Public Tracker**: A real-time dashboard showing the journey of each postcard (pending ➔ sent ➔ received). 
-*   **📊 Topic Insights**: A live chart showing which message topics are currently most requested by the community.
+*   **🧭 Journey Timeline**: Public cards now show stage progress, queue position, ETA, and traveler notes.
+*   **📊 Topic Insights**: A live top-topic insights card showing which message topics are most requested.
+*   **🧱 Wall of Warmth**: Recipients can opt-in to share short feedback publicly after confirming arrival.
 *   **🔒 Secure Admin Dashboard**: A hidden entrance (activated by a secret gesture) for the traveler to manage requests and use **GPS-stamping** to mark postcards as sent.
 *   **❤️ Warmth Receipt**: Recipients can manually enter their **W-XXXX ID** on the site to mark the postcard as "Received" with a simple, heart-warming UI.
 

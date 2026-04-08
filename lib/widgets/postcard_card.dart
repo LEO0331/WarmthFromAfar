@@ -7,11 +7,13 @@ import '../services/firebase_service.dart';
 class PostcardCard extends StatelessWidget {
   final Postcard postcard;
   final bool isAdminView;
+  final int? queuePosition;
 
   const PostcardCard({
     super.key,
     required this.postcard,
     this.isAdminView = false,
+    this.queuePosition,
   });
 
   @override
@@ -24,6 +26,8 @@ class PostcardCard extends StatelessWidget {
         subtitle: Text(
           postcard.status == 'sent' && postcard.sentCity != null
               ? "From: ${postcard.sentCity}"
+              : postcard.campaign != null && postcard.campaign!.isNotEmpty
+              ? "${postcard.campaign} • ${postcard.topic}"
               : "Topic: ${postcard.topic}",
         ),
         children: [
@@ -37,22 +41,35 @@ class PostcardCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("🆔 WARMTH ID:", style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text(
+                        "🆔 WARMTH ID:",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       SelectableText(
                         "W-${postcard.id.substring(postcard.id.length - 4).toUpperCase()}",
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.orange),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.orange,
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
                   const Text(
                     "📦 SHIPPING ADDRESS:",
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.red),
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
                   ),
                   const SizedBox(height: 5),
                   SelectableText(
                     postcard.address,
-                    style: const TextStyle(fontSize: 16, backgroundColor: Colors.yellow),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      backgroundColor: Colors.yellow,
+                    ),
                   ),
                   const SizedBox(height: 15),
                   SizedBox(
@@ -67,19 +84,38 @@ class PostcardCard extends StatelessWidget {
                       onPressed: () => _handleMarkAsSent(context),
                     ),
                   ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.edit_note),
+                      label: const Text("Update Journey Details"),
+                      onPressed: () => _openJourneyEditor(context),
+                    ),
+                  ),
                   if (postcard.status == 'sent') ...[
                     const SizedBox(height: 10),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton.icon(
-                        icon: const Icon(Icons.check_circle_outline, color: Colors.pink),
+                        icon: const Icon(
+                          Icons.check_circle_outline,
+                          color: Colors.pink,
+                        ),
                         label: const Text("Manual Mark as Received"),
-                        style: OutlinedButton.styleFrom(foregroundColor: Colors.pink),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.pink,
+                        ),
                         onPressed: () async {
-                          await FirebaseService().updateStatus(postcard.id, 'received');
+                          await FirebaseService().updateStatus(
+                            postcard.id,
+                            'received',
+                          );
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Updated to Received ❤️")),
+                              const SnackBar(
+                                content: Text("Updated to Received ❤️"),
+                              ),
                             );
                           }
                         },
@@ -91,9 +127,14 @@ class PostcardCard extends StatelessWidget {
                     SizedBox(
                       width: double.infinity,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.delete_sweep, color: Colors.redAccent),
+                        icon: const Icon(
+                          Icons.delete_sweep,
+                          color: Colors.redAccent,
+                        ),
                         label: const Text("Delete Record (Privacy Clean)"),
-                        style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.redAccent,
+                        ),
                         onPressed: () => _confirmDelete(context, postcard.id),
                       ),
                     ),
@@ -107,7 +148,6 @@ class PostcardCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 顯示狀態文字
                   Text(
                     "Status: ${postcard.status.toUpperCase()}",
                     style: TextStyle(
@@ -116,26 +156,66 @@ class PostcardCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  
-                  // --- 新增：顯示申請日期 ---
+                  Text(
+                    "Journey Stage: ${postcard.stage.toUpperCase()}",
+                    style: const TextStyle(fontSize: 12, color: Colors.black87),
+                  ),
+                  const SizedBox(height: 6),
+                  _buildJourneyTimeline(postcard.stage),
+                  const SizedBox(height: 8),
                   if (postcard.requestDate != null)
                     Text(
                       "Requested on: ${postcard.requestDate!.toString().substring(0, 10)}",
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
+                  if (queuePosition != null && postcard.status == 'pending')
+                    Text(
+                      "Queue position: #$queuePosition",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  if (postcard.etaDays != null)
+                    Text(
+                      "Estimated arrival: ${postcard.etaDays} day(s)",
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
 
-                  // 顯示寄出日期與城市
                   if (postcard.status == 'sent' && postcard.sentDate != null)
                     Text(
                       "Sent on: ${postcard.sentDate.toString().substring(0, 10)} ${postcard.sentCity != null ? 'from ${postcard.sentCity}' : ''}",
                       style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                    
-                  // 顯示到達鼓勵文字
+                  if (postcard.travelerNote != null &&
+                      postcard.travelerNote!.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        "Traveler note: ${postcard.travelerNote!}",
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  if (postcard.travelerPhotoUrl != null &&
+                      postcard.travelerPhotoUrl!.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          postcard.travelerPhotoUrl!,
+                          height: 120,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
                   if (postcard.status == 'received')
                     const Text(
                       "Arrived safely! ❤️",
-                      style: TextStyle(fontSize: 12, color: Colors.pink, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.pink,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                 ],
               ),
@@ -160,12 +240,15 @@ class PostcardCard extends StatelessWidget {
       }
 
       Position position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+        ),
       ).timeout(const Duration(seconds: 10));
 
       // 預設城市名稱為經緯度，防止 Geocoding 失敗
-      String cityName = "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
-      
+      String cityName =
+          "${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}";
+
       try {
         List<Placemark> placemarks = await placemarkFromCoordinates(
           position.latitude,
@@ -233,6 +316,120 @@ class PostcardCard extends StatelessWidget {
         );
     }
   }
+
+  Widget _buildJourneyTimeline(String stage) {
+    const stages = ['requested', 'writing', 'packed', 'sent', 'received'];
+    final stageIndex = stages.indexOf(stage);
+    return Row(
+      children: List.generate(stages.length, (index) {
+        final reached = stageIndex >= index || (stageIndex == -1 && index == 0);
+        return Expanded(
+          child: Container(
+            margin: EdgeInsets.only(right: index == stages.length - 1 ? 0 : 4),
+            height: 6,
+            decoration: BoxDecoration(
+              color: reached ? Colors.amber : Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        );
+      }),
+    );
+  }
+
+  Future<void> _openJourneyEditor(BuildContext context) async {
+    final noteController = TextEditingController(
+      text: postcard.travelerNote ?? "",
+    );
+    final photoController = TextEditingController(
+      text: postcard.travelerPhotoUrl ?? "",
+    );
+    final etaController = TextEditingController(
+      text: postcard.etaDays?.toString() ?? "",
+    );
+    String stage = postcard.stage;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) {
+          return AlertDialog(
+            title: const Text("Update Journey"),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    initialValue: stage,
+                    items: const [
+                      DropdownMenuItem(
+                        value: 'requested',
+                        child: Text("Requested"),
+                      ),
+                      DropdownMenuItem(
+                        value: 'writing',
+                        child: Text("Writing"),
+                      ),
+                      DropdownMenuItem(value: 'packed', child: Text("Packed")),
+                      DropdownMenuItem(value: 'sent', child: Text("Sent")),
+                      DropdownMenuItem(
+                        value: 'received',
+                        child: Text("Received"),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      if (value != null) setLocalState(() => stage = value);
+                    },
+                    decoration: const InputDecoration(labelText: "Stage"),
+                  ),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: "Traveler note",
+                    ),
+                  ),
+                  TextField(
+                    controller: photoController,
+                    decoration: const InputDecoration(
+                      labelText: "Photo URL (optional)",
+                    ),
+                  ),
+                  TextField(
+                    controller: etaController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "ETA days (optional)",
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text("Cancel"),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final eta = int.tryParse(etaController.text.trim());
+                  await FirebaseService().updateJourneyProgress(
+                    postcard.id,
+                    stage: stage,
+                    travelerNote: noteController.text.trim(),
+                    travelerPhotoUrl: photoController.text.trim(),
+                    etaDays: eta,
+                  );
+                  if (ctx.mounted) Navigator.pop(ctx);
+                },
+                child: const Text("Save"),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
 }
 
 void _confirmDelete(BuildContext context, String id) {
@@ -240,9 +437,14 @@ void _confirmDelete(BuildContext context, String id) {
     context: context,
     builder: (ctx) => AlertDialog(
       title: const Text("Confirm Deletion?"),
-      content: const Text("This will permanently remove the address and record from the database for privacy."),
+      content: const Text(
+        "This will permanently remove the address and record from the database for privacy.",
+      ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text("Cancel")),
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text("Cancel"),
+        ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () async {
