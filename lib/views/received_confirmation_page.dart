@@ -202,108 +202,114 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
   Widget _buildSuccessView() {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.favorite, size: 120, color: Colors.pink),
-              const SizedBox(height: 30),
-              const Text(
-                "You made my day!",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "I'm so happy to know the postcard reached you safely. Thank you for being part of this journey!",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-              const SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                initialValue: _reaction,
-                decoration: const InputDecoration(
-                  labelText: "How did this postcard make you feel?",
-                ),
-                items: const [
-                  DropdownMenuItem(value: "❤️", child: Text("❤️ Loved it")),
-                  DropdownMenuItem(value: "😊", child: Text("😊 So warm")),
-                  DropdownMenuItem(value: "🥹", child: Text("🥹 Touched")),
-                  DropdownMenuItem(value: "🌟", child: Text("🌟 Inspired")),
-                ],
-                onChanged: (val) {
-                  if (val != null) setState(() => _reaction = val);
-                },
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _messageController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: "One-line message (optional)",
-                  hintText: "This postcard arrived at the perfect time.",
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: const EdgeInsets.all(30.0),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Checkbox(
-                    value: _showOnWall,
-                    onChanged: (v) => setState(() => _showOnWall = v ?? false),
+                  const Icon(Icons.favorite, size: 120, color: Colors.pink),
+                  const SizedBox(height: 30),
+                  const Text(
+                    "You made my day!",
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                   ),
-                  const Expanded(
-                    child: Text(
-                      "Allow this message to appear on the public Wall of Warmth.",
-                      style: TextStyle(fontSize: 12),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "I'm so happy to know the postcard reached you safely. Thank you for being part of this journey!",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 20),
+                  DropdownButtonFormField<String>(
+                    initialValue: _reaction,
+                    decoration: const InputDecoration(
+                      labelText: "How did this postcard make you feel?",
                     ),
+                    items: const [
+                      DropdownMenuItem(value: "❤️", child: Text("❤️ Loved it")),
+                      DropdownMenuItem(value: "😊", child: Text("😊 So warm")),
+                      DropdownMenuItem(value: "🥹", child: Text("🥹 Touched")),
+                      DropdownMenuItem(value: "🌟", child: Text("🌟 Inspired")),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setState(() => _reaction = val);
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _messageController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: "One-line message (optional)",
+                      hintText: "This postcard arrived at the perfect time.",
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _showOnWall,
+                        onChanged: (v) =>
+                            setState(() => _showOnWall = v ?? false),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          "Allow this message to appear on the public Wall of Warmth.",
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_confirmedDocId == null) return;
+                      await FirebaseService().updateReceiptFeedback(
+                        _confirmedDocId!,
+                        reaction: _reaction,
+                        message: _messageController.text.trim(),
+                        showOnWall: _showOnWall,
+                      );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Feedback submitted. Thank you!"),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black87,
+                      side: BorderSide(color: Colors.amber.shade400),
+                    ),
+                    child: const Text("Share Feedback"),
+                  ),
+                  const SizedBox(height: 40),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _isSuccess = false;
+                        _idController.clear();
+                        _messageController.clear();
+                      });
+                      // 導回到首頁 (Request Tab)
+                      Navigator.pushNamed(context, '/');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black87,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text("Back to Home"),
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (_confirmedDocId == null) return;
-                  await FirebaseService().updateReceiptFeedback(
-                    _confirmedDocId!,
-                    reaction: _reaction,
-                    message: _messageController.text.trim(),
-                    showOnWall: _showOnWall,
-                  );
-                  if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Feedback submitted. Thank you!"),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black87,
-                  side: BorderSide(color: Colors.amber.shade400),
-                ),
-                child: const Text("Share Feedback"),
-              ),
-              const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _isSuccess = false;
-                    _idController.clear();
-                    _messageController.clear();
-                  });
-                  // 導回到首頁 (Request Tab)
-                  Navigator.pushNamed(context, '/');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber,
-                  foregroundColor: Colors.black87,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                ),
-                child: const Text("Back to Home"),
-              ),
-            ],
+            ),
           ),
         ),
       ),
