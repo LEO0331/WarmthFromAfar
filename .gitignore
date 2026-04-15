@@ -50,3 +50,4 @@ android/app/google-services.json
 macos/Runner/GoogleService-Info.plist
 
 .omx
+node_modules
