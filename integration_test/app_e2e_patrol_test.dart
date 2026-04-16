@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:patrol/patrol.dart';
 import 'package:provider/provider.dart';
 import 'package:warmth_from_afar/main.dart';
 import 'package:warmth_from_afar/models/postcard.dart';
@@ -13,7 +13,7 @@ class MockFirebaseService extends Mock implements FirebaseService {}
 class MockAuthProvider extends Mock implements AuthProvider {}
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  PatrolBinding.ensureInitialized(NativeAutomatorConfig());
 
   late MockFirebaseService mockFirebaseService;
   late MockAuthProvider mockAuthProvider;
@@ -87,29 +87,28 @@ void main() {
     );
   }
 
-  testWidgets('e2e: tracking and receipt confirmation on chrome', (tester) async {
-    await tester.pumpWidget(buildApp());
-    await tester.pumpAndSettle();
+  patrolTest('e2e: tracking and receipt confirmation (mobile patrol)', ($) async {
+    await $.pumpWidgetAndSettle(buildApp());
 
     expect(find.text('How WanderStamp works'), findsOneWidget);
 
-    await tester.tap(find.text('Track'));
-    await tester.pumpAndSettle();
+    await $('Track').tap();
+    await $.pumpAndSettle();
 
     expect(find.text('✈️ Sent'), findsOneWidget);
     expect(find.textContaining('Alice'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Switch to Map'));
-    await tester.pumpAndSettle();
+    await $(find.byTooltip('Switch to Map')).tap();
+    await $.pumpAndSettle();
     expect(find.byTooltip('Switch to List'), findsOneWidget);
 
-    await tester.tap(find.text('Received'));
-    await tester.pumpAndSettle();
+    await $('Received').tap();
+    await $.pumpAndSettle();
     expect(find.text('Did you receive a postcard?'), findsOneWidget);
 
-    await tester.enterText(find.byType(TextField).first, '8A2C');
-    await tester.tap(find.text('Confirm Arrival ❤️'));
-    await tester.pumpAndSettle();
+    await $(TextField).first.enterText('8A2C');
+    await $('Confirm Arrival ❤️').tap();
+    await $.pumpAndSettle();
 
     expect(find.text('You made my day!'), findsOneWidget);
     verify(() => mockFirebaseService.getPostcardByShortId('8A2C')).called(1);
