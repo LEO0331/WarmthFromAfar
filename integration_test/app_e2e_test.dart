@@ -7,6 +7,7 @@ import 'package:warmth_from_afar/main.dart';
 import 'package:warmth_from_afar/models/postcard.dart';
 import 'package:warmth_from_afar/providers/auth_provider.dart';
 import 'package:warmth_from_afar/services/firebase_service.dart';
+import 'package:warmth_from_afar/widgets/success_dialog.dart';
 
 class MockFirebaseService extends Mock implements FirebaseService {}
 
@@ -117,5 +118,123 @@ void main() {
       () =>
           mockFirebaseService.updateStatus('test-postcard-1-8A2C', 'received'),
     ).called(1);
+  });
+
+  testWidgets('e2e: request flow shows required-field validation', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Receive Warmth From A Traveller'), findsOneWidget);
+
+    await tester.drag(
+      find.byType(SingleChildScrollView).first,
+      const Offset(0, -300),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.widgetWithText(ElevatedButton, 'Continue to Address'),
+      warnIfMissed: false,
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Please complete name and topic first.'), findsOneWidget);
+    verifyNever(
+      () => mockFirebaseService.addRequest(
+        any(),
+        any(),
+        any(),
+        requestType: any(named: 'requestType'),
+        giftFromName: any(named: 'giftFromName'),
+        giftMessage: any(named: 'giftMessage'),
+        campaign: any(named: 'campaign'),
+      ),
+    );
+  });
+
+  testWidgets('e2e: tracking map/list toggle and sent-only filter', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Track'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Alice'), findsOneWidget);
+    expect(find.textContaining('Bob'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Switch to Map'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Switch to List'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Switch to List'));
+    await tester.pumpAndSettle();
+    expect(find.text('✈️ Sent'), findsOneWidget);
+    expect(find.text('⏳ Pending'), findsOneWidget);
+
+    await tester.tap(find.byType(Switch));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Bob'), findsOneWidget);
+    expect(find.textContaining('Alice'), findsNothing);
+  });
+
+  testWidgets('e2e: received flow rejects invalid short id', (tester) async {
+    when(
+      () => mockFirebaseService.getPostcardByShortId('ZZZZ'),
+    ).thenThrow(Exception('Not found'));
+
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Received'));
+    await tester.pumpAndSettle();
+    expect(find.text('Did you receive a postcard?'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField).first, 'ZZZZ');
+    await tester.tap(find.text('Confirm Arrival ❤️'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Postcard not found. Please check the ID.'), findsOneWidget);
+  });
+
+  testWidgets('e2e: success dialog actions copy, share, and open tracking', (
+    tester,
+  ) async {
+    var openedTracking = false;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (context) {
+              return Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => SuccessDialog(
+                        docId: 'request-id-1234',
+                        onOpenTracking: () => openedTracking = true,
+                      ),
+                    );
+                  },
+                  child: const Text('Show Success Dialog'),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Show Success Dialog'));
+    await tester.pumpAndSettle();
+    expect(find.text('Warmth Requested!'), findsOneWidget);
+    expect(find.text('W-1234'), findsOneWidget);
+
+    expect(find.text('Copy ID'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
+
+    await tester.tap(find.text('Open Tracking'));
+    await tester.pumpAndSettle();
+    expect(openedTracking, isTrue);
   });
 }
