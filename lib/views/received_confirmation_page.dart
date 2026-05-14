@@ -267,6 +267,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                   ElevatedButton(
                     onPressed: () async {
                       if (_confirmedDocId == null) return;
+                      final messenger = ScaffoldMessenger.of(context);
                       await FirebaseService().updateReceiptFeedback(
                         _confirmedDocId!,
                         reaction: _reaction,
@@ -274,7 +275,7 @@ class _ReceivedConfirmationPageState extends State<ReceivedConfirmationPage> {
                         showOnWall: _showOnWall,
                       );
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      messenger.showSnackBar(
                         const SnackBar(
                           content: Text("Feedback submitted. Thank you!"),
                         ),

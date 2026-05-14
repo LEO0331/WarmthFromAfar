@@ -13,7 +13,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final _email = TextEditingController();
   final _pw = TextEditingController();
 
-  void _handleLogin() async {
+  @override
+  void dispose() {
+    _email.dispose();
+    _pw.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleLogin() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final error = await auth.login(_email.text, _pw.text);
     if (error == null && mounted) {
