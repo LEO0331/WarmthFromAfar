@@ -54,5 +54,29 @@ void main() {
       expect(find.textContaining("Message"), findsNWidgets(6));
       expect(find.text("Message 6"), findsNothing);
     });
+
+    testWidgets('renders short document IDs without crashing', (tester) async {
+      final postcards = [
+        Postcard(
+          id: 'xy',
+          receiverName: 'U',
+          address: 'Addr',
+          topic: 'Topic',
+          status: 'received',
+          showOnWall: true,
+          recipientReaction: '😊',
+          recipientMessage: 'Short ID message',
+        ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: WallOfWarmth(postcards: postcards)),
+        ),
+      );
+
+      expect(find.textContaining("W-XY"), findsOneWidget);
+      expect(find.text("Short ID message"), findsOneWidget);
+    });
   });
 }

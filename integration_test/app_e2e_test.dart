@@ -40,6 +40,14 @@ void main() {
       lng: 139.65,
       sentCity: 'Tokyo',
     ),
+    Postcard(
+      id: 'request-id-1234',
+      receiverName: 'Charlie',
+      address: 'Berlin, Germany',
+      topic: 'Inspiration (勇氣與啟發)',
+      status: 'pending',
+      requestDate: DateTime(2026, 4, 3),
+    ),
   ];
 
   setUp(() {
@@ -88,7 +96,9 @@ void main() {
     );
   }
 
-  testWidgets('e2e: tracking and receipt confirmation on chrome', (tester) async {
+  testWidgets('e2e: tracking and receipt confirmation on chrome', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
@@ -120,7 +130,9 @@ void main() {
     ).called(1);
   });
 
-  testWidgets('e2e: request flow shows required-field validation', (tester) async {
+  testWidgets('e2e: request flow shows required-field validation', (
+    tester,
+  ) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
@@ -148,6 +160,50 @@ void main() {
         campaign: any(named: 'campaign'),
       ),
     );
+  });
+
+  testWidgets('e2e: request success shows tracker id and opens tracking', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'Charlie');
+
+    await tester.ensureVisible(
+      find.byType(DropdownButtonFormField<String>).first,
+    );
+    await tester.tap(find.byType(DropdownButtonFormField<String>).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Inspiration (勇氣與啟發)').last);
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Continue to Address'));
+    await tester.tap(find.text('Continue to Address'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).first, 'Berlin, Germany');
+    await tester.ensureVisible(find.text('Send Warmth Request'));
+    await tester.tap(find.text('Send Warmth Request'));
+    await tester.pump(const Duration(milliseconds: 900));
+
+    expect(find.text('Warmth Requested!'), findsOneWidget);
+    expect(find.text('W-1234'), findsOneWidget);
+    verify(
+      () => mockFirebaseService.addRequest(
+        'Charlie',
+        'Berlin, Germany',
+        'Inspiration (勇氣與啟發)',
+        requestType: 'self',
+        giftFromName: null,
+        giftMessage: null,
+        campaign: null,
+      ),
+    ).called(1);
+
+    await tester.tap(find.text('Open Tracking'));
+    await tester.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('Charlie'), findsOneWidget);
   });
 
   testWidgets('e2e: tracking map/list toggle and sent-only filter', (
@@ -192,7 +248,10 @@ void main() {
     await tester.tap(find.text('Confirm Arrival ❤️'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Postcard not found. Please check the ID.'), findsOneWidget);
+    expect(
+      find.text('Postcard not found. Please check the ID.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('e2e: success dialog actions copy, share, and open tracking', (

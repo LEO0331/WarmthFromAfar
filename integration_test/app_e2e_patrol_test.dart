@@ -39,6 +39,14 @@ void main() {
       lng: 139.65,
       sentCity: 'Tokyo',
     ),
+    Postcard(
+      id: 'request-id-1234',
+      receiverName: 'Charlie',
+      address: 'Berlin, Germany',
+      topic: 'Inspiration (勇氣與啟發)',
+      status: 'pending',
+      requestDate: DateTime(2026, 4, 3),
+    ),
   ];
 
   setUp(() {
@@ -87,7 +95,9 @@ void main() {
     );
   }
 
-  patrolTest('e2e: tracking and receipt confirmation (mobile patrol)', ($) async {
+  patrolTest('e2e: tracking and receipt confirmation (mobile patrol)', (
+    $,
+  ) async {
     await $.pumpWidgetAndSettle(buildApp());
 
     expect(find.text('How WanderStamp works'), findsOneWidget);
@@ -116,5 +126,42 @@ void main() {
       () =>
           mockFirebaseService.updateStatus('test-postcard-1-8A2C', 'received'),
     ).called(1);
+  });
+
+  patrolTest('e2e: request success opens tracking (mobile patrol)', ($) async {
+    await $.pumpWidgetAndSettle(buildApp());
+
+    await $(TextField).first.enterText('Charlie');
+    await $(DropdownButtonFormField<String>).first.tap();
+    await $.pumpAndSettle();
+    await $('Inspiration (勇氣與啟發)').last.tap();
+    await $.pumpAndSettle();
+
+    await $('Continue to Address').scrollTo();
+    await $('Continue to Address').tap();
+    await $.pumpAndSettle();
+
+    await $(TextField).first.enterText('Berlin, Germany');
+    await $('Send Warmth Request').scrollTo();
+    await $('Send Warmth Request').tap();
+    await $.pump(const Duration(milliseconds: 900));
+
+    expect(find.text('Warmth Requested!'), findsOneWidget);
+    expect(find.text('W-1234'), findsOneWidget);
+    verify(
+      () => mockFirebaseService.addRequest(
+        'Charlie',
+        'Berlin, Germany',
+        'Inspiration (勇氣與啟發)',
+        requestType: 'self',
+        giftFromName: null,
+        giftMessage: null,
+        campaign: null,
+      ),
+    ).called(1);
+
+    await $('Open Tracking').tap();
+    await $.pump(const Duration(milliseconds: 600));
+    expect(find.textContaining('Charlie'), findsOneWidget);
   });
 }

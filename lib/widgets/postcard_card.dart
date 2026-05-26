@@ -46,7 +46,7 @@ class PostcardCard extends StatelessWidget {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       SelectableText(
-                        "W-${postcard.id.substring(postcard.id.length - 4).toUpperCase()}",
+                        postcard.warmthId,
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -338,96 +338,115 @@ class PostcardCard extends StatelessWidget {
   }
 
   Future<void> _openJourneyEditor(BuildContext context) async {
-    final noteController = TextEditingController(
-      text: postcard.travelerNote ?? "",
-    );
-    final photoController = TextEditingController(
-      text: postcard.travelerPhotoUrl ?? "",
-    );
-    final etaController = TextEditingController(
-      text: postcard.etaDays?.toString() ?? "",
-    );
-    String stage = postcard.stage;
-
     await showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setLocalState) {
-          return AlertDialog(
-            title: const Text("Update Journey"),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String>(
-                    initialValue: stage,
-                    items: const [
-                      DropdownMenuItem(
-                        value: 'requested',
-                        child: Text("Requested"),
-                      ),
-                      DropdownMenuItem(
-                        value: 'writing',
-                        child: Text("Writing"),
-                      ),
-                      DropdownMenuItem(value: 'packed', child: Text("Packed")),
-                      DropdownMenuItem(value: 'sent', child: Text("Sent")),
-                      DropdownMenuItem(
-                        value: 'received',
-                        child: Text("Received"),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      if (value != null) setLocalState(() => stage = value);
-                    },
-                    decoration: const InputDecoration(labelText: "Stage"),
-                  ),
-                  TextField(
-                    controller: noteController,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      labelText: "Traveler note",
-                    ),
-                  ),
-                  TextField(
-                    controller: photoController,
-                    decoration: const InputDecoration(
-                      labelText: "Photo URL (optional)",
-                    ),
-                  ),
-                  TextField(
-                    controller: etaController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "ETA days (optional)",
-                    ),
-                  ),
-                ],
+      builder: (ctx) => _JourneyEditorDialog(postcard: postcard),
+    );
+  }
+}
+
+class _JourneyEditorDialog extends StatefulWidget {
+  final Postcard postcard;
+
+  const _JourneyEditorDialog({required this.postcard});
+
+  @override
+  State<_JourneyEditorDialog> createState() => _JourneyEditorDialogState();
+}
+
+class _JourneyEditorDialogState extends State<_JourneyEditorDialog> {
+  late final TextEditingController _noteController;
+  late final TextEditingController _photoController;
+  late final TextEditingController _etaController;
+  late String _stage;
+
+  @override
+  void initState() {
+    super.initState();
+    _stage = widget.postcard.stage;
+    _noteController = TextEditingController(
+      text: widget.postcard.travelerNote ?? "",
+    );
+    _photoController = TextEditingController(
+      text: widget.postcard.travelerPhotoUrl ?? "",
+    );
+    _etaController = TextEditingController(
+      text: widget.postcard.etaDays?.toString() ?? "",
+    );
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    _photoController.dispose();
+    _etaController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text("Update Journey"),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<String>(
+              initialValue: _stage,
+              items: const [
+                DropdownMenuItem(value: 'requested', child: Text("Requested")),
+                DropdownMenuItem(value: 'writing', child: Text("Writing")),
+                DropdownMenuItem(value: 'packed', child: Text("Packed")),
+                DropdownMenuItem(value: 'sent', child: Text("Sent")),
+                DropdownMenuItem(value: 'received', child: Text("Received")),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _stage = value);
+              },
+              decoration: const InputDecoration(labelText: "Stage"),
+            ),
+            TextField(
+              controller: _noteController,
+              maxLines: 2,
+              decoration: const InputDecoration(labelText: "Traveler note"),
+            ),
+            TextField(
+              controller: _photoController,
+              decoration: const InputDecoration(
+                labelText: "Photo URL (optional)",
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text("Cancel"),
+            TextField(
+              controller: _etaController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: "ETA days (optional)",
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  final eta = int.tryParse(etaController.text.trim());
-                  await FirebaseService().updateJourneyProgress(
-                    postcard.id,
-                    stage: stage,
-                    travelerNote: noteController.text.trim(),
-                    travelerPhotoUrl: photoController.text.trim(),
-                    etaDays: eta,
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                },
-                child: const Text("Save"),
-              ),
-            ],
-          );
-        },
+            ),
+          ],
+        ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("Cancel"),
+        ),
+        ElevatedButton(
+          onPressed: () async {
+            final eta = int.tryParse(_etaController.text.trim());
+            final navigator = Navigator.of(context);
+            await FirebaseService().updateJourneyProgress(
+              widget.postcard.id,
+              stage: _stage,
+              travelerNote: _noteController.text.trim(),
+              travelerPhotoUrl: _photoController.text.trim(),
+              etaDays: eta,
+            );
+            if (navigator.mounted) navigator.pop();
+          },
+          child: const Text("Save"),
+        ),
+      ],
     );
   }
 }
@@ -448,8 +467,9 @@ void _confirmDelete(BuildContext context, String id) {
         ElevatedButton(
           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
           onPressed: () async {
+            final navigator = Navigator.of(ctx);
             await FirebaseService().deletePostcard(id);
-            if (context.mounted) Navigator.pop(ctx);
+            if (navigator.mounted) navigator.pop();
           },
           child: const Text("Delete Now"),
         ),

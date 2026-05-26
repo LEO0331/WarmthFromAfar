@@ -135,5 +135,27 @@ void main() {
       expect(map['recipientMessage'], 'Thanks!');
       expect(map['showOnWall'], true);
     });
+
+    test('short IDs should be safe for short and standard document IDs', () {
+      final short = Postcard(
+        id: 'a1',
+        receiverName: 'Leo',
+        address: 'Address',
+        topic: 'Topic',
+        status: 'pending',
+      );
+      final standard = Postcard(
+        id: 'postcard-id-8a2c',
+        receiverName: 'Leo',
+        address: 'Address',
+        topic: 'Topic',
+        status: 'pending',
+      );
+
+      expect(short.shortId, 'A1');
+      expect(short.warmthId, 'W-A1');
+      expect(standard.shortId, '8A2C');
+      expect(standard.warmthId, 'W-8A2C');
+    });
   });
 }

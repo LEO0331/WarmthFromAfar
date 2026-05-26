@@ -49,8 +49,15 @@ class Postcard {
     this.showOnWall = false,
   });
 
+  String get shortId {
+    if (id.length < 4) return id.toUpperCase();
+    return id.substring(id.length - 4).toUpperCase();
+  }
+
+  String get warmthId => 'W-$shortId';
+
   factory Postcard.fromFirestore(DocumentSnapshot doc) {
-    Map data = doc.data() as Map;
+    final data = (doc.data() as Map?) ?? {};
     return Postcard(
       id: doc.id,
       receiverName: data['receiverName'] ?? 'Anonymous',
@@ -70,10 +77,10 @@ class Postcard {
       sentCity: data['sentCity'],
       travelerNote: data['travelerNote'],
       travelerPhotoUrl: data['travelerPhotoUrl'],
-      etaDays: data['etaDays'],
+      etaDays: (data['etaDays'] as num?)?.toInt(),
       recipientReaction: data['recipientReaction'],
       recipientMessage: data['recipientMessage'],
-      showOnWall: data['showOnWall'] ?? false,
+      showOnWall: data['showOnWall'] == true,
     );
   }
 

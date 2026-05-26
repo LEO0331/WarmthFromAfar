@@ -191,6 +191,24 @@ void main() {
       ).called(1);
     });
 
+    testWidgets('admin view handles short document IDs without crashing', (
+      tester,
+    ) async {
+      final postcard = Postcard(
+        id: 'ab',
+        receiverName: 'Short',
+        address: 'Address',
+        topic: 'Topic',
+        status: 'pending',
+      );
+
+      await pumpCard(tester, postcard, admin: true);
+      await tester.tap(find.text("To: Short"));
+      await tester.pumpAndSettle();
+
+      expect(find.text("W-AB"), findsOneWidget);
+    });
+
     testWidgets('admin locate & send falls back without location plugin', (
       tester,
     ) async {

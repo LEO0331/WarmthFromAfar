@@ -53,7 +53,7 @@ class WallOfWarmth extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "${item.recipientReaction}  W-${item.id.substring(item.id.length - 4).toUpperCase()}",
+                      "${item.recipientReaction}  ${item.warmthId}",
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
