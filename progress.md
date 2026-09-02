@@ -10,6 +10,7 @@
 - Created the agent guide, feature tracker, handoff template, and repeatable verification entrypoint.
 - Documented the Flutter/Firebase boundaries, privacy invariant, source layout, and required completion gate.
 - Replaced Carto's API-key-required map tiles with OpenStreetMap standard tiles and added a regression test for the URL.
+- Pushed deployment-trigger commit `4ec6f1d` to `main`; the existing GitHub Pages workflow will rebuild the site.
 
 ## What's In Progress
 
@@ -17,12 +18,13 @@
 
 ## What's Next
 
-1. Install Flutter or add its SDK `bin` directory to `PATH`, then run `./init.sh` from a Bash-compatible shell (or run its commands individually).
+1. Enable Windows Developer Mode to allow Flutter plugin symlinks, add `D:\Practice\flutter\bin` to `PATH`, then run `./init.sh` from a Bash-compatible shell (or run its commands individually).
 2. Change `baseline-verification` and `next-request` to `done` only after the full gate passes.
+3. Confirm the GitHub Pages workflow for `4ec6f1d` succeeds, then reload the tracking map.
 
 ## Blockers / Risks
 
-- Flutter SDK is unavailable on `PATH`; verification cannot run until that environment prerequisite is restored.
+- Flutter SDK exists at `D:\Practice\flutter` but is not on `PATH`; direct execution reached dependency resolution but Windows Developer Mode is disabled, preventing the plugin symlinks required by the test runner.
 - Firebase-dependent integration behavior may require local emulator or valid project configuration; do not substitute production credentials.
 
 ## Files Modified This Session
@@ -37,7 +39,7 @@
 - [x] Full gate attempted: `flutter pub get && flutter analyze && flutter test && flutter build web`
   - Result: blocked before dependency resolution because PowerShell could not locate `flutter`.
 - [ ] Map regression: `flutter test test/views/tracking_map_view_test.dart`
-  - Result: blocked because no Flutter SDK was found on PATH or at standard local SDK locations.
+  - Result: blocked because Windows Developer Mode is disabled and Flutter cannot create plugin symlinks.
 
 ## Notes for Next Session
 
