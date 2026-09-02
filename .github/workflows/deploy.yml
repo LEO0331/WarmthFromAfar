@@ -2,32 +2,46 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # 當推送到 main 分支時觸發
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'stable'
-          # flutter-version: '3.40.0' # 可選：指定版本
+          channel: stable
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Web
-        # 重要：不使用 --web-renderer 參數（新版已移除），改由 index.html 控制
-        # 確保 base-href 與你的 Repo 名稱一致
         run: flutter build web --release --base-href "/WarmthFromAfar/"
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web
+          path: build/web
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
