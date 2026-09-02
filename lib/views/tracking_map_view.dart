@@ -28,12 +28,10 @@ class WanderMap extends StatelessWidget {
           maxZoom: 18.0,
         ),
         children: [
-          // 2. 設定圖層 (OpenStreetMap 免費圖資)
+          // 2. Use OpenStreetMap's public standard tiles. Unlike the previous
+          // Carto endpoint, this source does not require an API key.
           TileLayer(
-            // 使用 CartoDB 伺服器，它對 Web 端的連線限制最少
-            urlTemplate:
-                'https://cartodb-basemaps-a.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
-            subdomains: ['a', 'b', 'c', 'd'],
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.leo.warmthfromafar',
             tileProvider: tileProvider,
           ),
@@ -53,9 +51,9 @@ class WanderMap extends StatelessWidget {
             }).toList(),
           ),
 
-          // 4. 加上版權宣告 (OSM 規範)
+          // 4. Display the required OpenStreetMap attribution.
           const RichAttributionWidget(
-            attributions: [TextSourceAttribution('OpenStreetMap contributors')],
+            attributions: [TextSourceAttribution('© OpenStreetMap contributors')],
           ),
         ],
       ),

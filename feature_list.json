@@ -1,0 +1,20 @@
+{
+  "features": [
+    {
+      "id": "baseline-verification",
+      "name": "Establish Flutter verification baseline",
+      "description": "Confirm dependencies, static analysis, automated tests, and the web build work from a clean project state.",
+      "dependencies": [],
+      "status": "blocked",
+      "evidence": "Harness created 2026-09-02. Full gate attempted on 2026-09-02, but Flutter SDK is not available on PATH (PowerShell: 'flutter' is not recognized)."
+    },
+    {
+      "id": "next-request",
+      "name": "Restore public map tiles",
+      "description": "Replace the map tile source that displays an API-key-required overlay with an attribution-compliant public tile source and cover the configuration with a widget test.",
+      "dependencies": ["baseline-verification"],
+      "status": "implemented-unverified",
+      "evidence": "Updated 2026-09-02 to https://tile.openstreetmap.org/{z}/{x}/{y}.png and added a regression test. Flutter SDK was not found on PATH or standard local SDK locations, so the test suite and web build remain unverified."
+    }
+  ]
+}

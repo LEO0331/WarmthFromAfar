@@ -13,6 +13,26 @@ class OfflineTileProvider extends TileProvider {
 
 void main() {
   group('WanderMap Widget Tests', () {
+    testWidgets('uses public OpenStreetMap tiles without an API key', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WanderMap(
+            postcards: const <Postcard>[],
+            tileProvider: OfflineTileProvider(),
+          ),
+        ),
+      );
+
+      final tileLayer = tester.widget<TileLayer>(find.byType(TileLayer));
+      expect(
+        tileLayer.urlTemplate,
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      );
+      expect(tileLayer.urlTemplate, isNot(contains('carto')));
+    });
+
     testWidgets('should render FlutterMap with markers', (
       WidgetTester tester,
     ) async {
