@@ -2,7 +2,7 @@
 
 ## Current State
 
-**Last Updated:** 2026-09-02
+**Last Updated:** 2026-09-03
 **Active Feature:** None — verification blocked pending Flutter SDK availability
 
 ## What's Done
@@ -11,6 +11,7 @@
 - Documented the Flutter/Firebase boundaries, privacy invariant, source layout, and required completion gate.
 - Replaced Carto's API-key-required map tiles with OpenStreetMap standard tiles and added a regression test for the URL.
 - Pushed deployment-trigger commit `4ec6f1d` to `main`; the existing GitHub Pages workflow will rebuild the site.
+- Added a README Mermaid architecture diagram covering Flutter routing and state, Firebase service access, Firebase Auth, Firestore, OpenStreetMap tiles, and GitHub Pages deployment. The diagram calls out the private-address boundary and notes that deployed Firestore rules are not stored in this repository.
 
 ## What's In Progress
 
@@ -33,6 +34,8 @@
 - `feature_list.json` — current work and dependency state.
 - `init.sh` — full verification entrypoint.
 - `session-handoff.md` — restartable session template.
+- `README.md` — Mermaid architecture diagram and privacy-boundary note.
+- `feature_list.json` — architecture documentation completion evidence.
 
 ## Evidence of Completion
 

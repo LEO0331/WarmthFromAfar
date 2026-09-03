@@ -15,6 +15,14 @@
       "dependencies": ["baseline-verification"],
       "status": "implemented-unverified",
       "evidence": "Updated 2026-09-02 to https://tile.openstreetmap.org/{z}/{x}/{y}.png and added a regression test. A coverage run reached Flutter successfully but Windows blocked plugin symlink creation because Developer Mode is disabled, so the test suite and web build remain unverified."
+    },
+    {
+      "id": "architecture-diagram",
+      "name": "Document application architecture",
+      "description": "Add a maintainable README architecture diagram that describes the Flutter Web, Firebase, deployment, and privacy boundaries.",
+      "dependencies": [],
+      "status": "done",
+      "evidence": "Completed 2026-09-03. README now contains a Mermaid diagram reviewed against main.dart, auth_provider.dart, firebase_service.dart, firebase_options.dart, firebase.json, and pubspec.yaml."
     }
   ]
 }

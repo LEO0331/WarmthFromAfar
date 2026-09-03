@@ -36,6 +36,45 @@ In a world of instant messaging, the physical touch of a handwritten postcard is
 *   **State Management**: [Provider](https://pub.dev)
 *   **Deployment**: [GitHub Actions](https://github.com) & GitHub Pages
 
+## 🏗️ Architecture
+
+```mermaid
+flowchart TB
+    Visitor[Visitor / recipient] --> WebApp
+    Admin[Authenticated admin] --> WebApp
+
+    subgraph Delivery[Deployment]
+        CI[GitHub Actions] --> Pages[GitHub Pages]
+    end
+    Pages --> WebApp[Flutter Web application]
+
+    subgraph Client[Flutter client]
+        Bootstrap[main.dart\nFirebase bootstrap + Provider] --> Router[MaterialApp routes / navigation]
+        Router --> PublicViews[Public views\nrequest · tracking · receipt]
+        Router --> AdminViews[Admin login and dashboard]
+        PublicViews --> Components[Widgets\ntracker, map, insights, wall]
+        AdminViews --> Components
+        AdminViews --> AuthState[AuthProvider\nadmin session state]
+        PublicViews --> DataAccess[FirebaseService\napplication data boundary]
+        AdminViews --> DataAccess
+        AuthState --> AuthSDK[Firebase Auth SDK]
+        DataAccess --> AuthSDK
+        DataAccess --> FirestoreSDK[Cloud Firestore SDK]
+        Components --> Maps[OpenStreetMap tiles]
+    end
+
+    subgraph Firebase[Firebase project]
+        AuthSDK --> Auth[Firebase Authentication]
+        FirestoreSDK --> Postcards[(Firestore: postcards)]
+        Rules[Deployed Firestore security rules] -. enforce .-> Postcards
+    end
+
+    Postcards --> Restricted[Private fields\nrecipient name and address\nadmin access only]
+    Postcards --> Public[Public status data\nstage, journey, topic, opt-in feedback]
+```
+
+The client initializes Firebase before rendering and uses `AuthProvider` for the admin session. All postcard reads and writes pass through `FirebaseService`; public tracking, map, insights, and wall widgets consume the public-facing journey data, while shipping addresses are an admin-only concern enforced by deployed Firestore rules. Firestore rules are not versioned in this repository, so their deployed configuration must be reviewed separately when changing data access.
+
 ## 🛡️ Security & Privacy
 
 *   **Address Protection**: Shipping addresses are **strictly hidden** from the public. Only the authenticated admin can access them.
